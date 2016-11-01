@@ -12,7 +12,7 @@ PACKAGE_NAME = 'hdfs'
 WAIT_TIME_IN_SECONDS = 15 * 60
 
 TASK_RUNNING_STATE = 'TASK_RUNNING'
-DEFAULT_TASK_COUNT = 1
+DEFAULT_HDFS_TASK_COUNT = 8 # 3 data nodes, 3 journal nodes, 2 name nodes
 
 
 # expected SECURITY values: 'permissive', 'strict', 'disabled'
@@ -117,7 +117,6 @@ def spin(fn, success_predicate, *args, **kwargs):
     assert is_successful, error_message
 
     return result
-
 
 def _nested_dict_merge(a, b, path=None):
     "ripped from http://stackoverflow.com/questions/7204805/dictionaries-of-dictionaries-merge"
