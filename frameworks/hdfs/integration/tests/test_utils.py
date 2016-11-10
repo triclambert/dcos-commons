@@ -9,9 +9,9 @@ import subprocess
 
 
 PACKAGE_NAME = 'hdfs'
+TASK_RUNNING_STATE = 'TASK_RUNNING'
 WAIT_TIME_IN_SECONDS = 15 * 60
 
-TASK_RUNNING_STATE = 'TASK_RUNNING'
 DEFAULT_HDFS_TASK_COUNT = 8 # 3 data nodes, 3 journal nodes, 2 name nodes
 
 
@@ -31,7 +31,7 @@ else:
     DEFAULT_OPTIONS_DICT = {}
 
 
-def check_health(expected_tasks = DEFAULT_TASK_COUNT):
+def check_health(expected_tasks = DEFAULT_HDFS_TASK_COUNT):
     def fn():
         try:
             return shakedown.get_service_tasks(PACKAGE_NAME)
@@ -80,6 +80,12 @@ def install(package_version=None, package_name=PACKAGE_NAME, additional_options 
         options_json=merged_options)
 
 
+def install(additional_options = {}):
+    merged_options = _nested_dict_merge(DEFAULT_OPTIONS_DICT, additional_options)
+    print('Installing {} with options: {}'.format(PACKAGE_NAME, merged_options))
+    shakedown.install_package_and_wait(PACKAGE_NAME, options_json=merged_options)
+
+
 def uninstall():
     print('Uninstalling/janitoring {}'.format(PACKAGE_NAME))
     try:
@@ -91,6 +97,7 @@ def uninstall():
         'docker run mesosphere/janitor /janitor.py '
         '-r hdfs-role -p hdfs-principal -z dcos-service-hdfs '
         '--auth_token={}'.format(
+            PRINCIPAL,
             shakedown.run_dcos_command(
                 'config show core.dcos_acs_token'
             )[0].strip()
@@ -133,7 +140,6 @@ def _nested_dict_merge(a, b, path=None):
         else:
             a[key] = b[key]
     return a
-
 
 def get_marathon_config():
     response = dcos.http.get(marathon_api_url('apps/{}/versions'.format(PACKAGE_NAME)))
