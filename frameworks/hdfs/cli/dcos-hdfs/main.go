@@ -5,42 +5,65 @@ import (
 	"github.com/mesosphere/dcos-commons/cli"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"log"
+	"net/url"
+	"os"
 	"strings"
 )
 
 func main() {
-	app, err := cli.NewApp("0.1.0", "Mesosphere", "Provides an example for DC/OS service developers")
+	modName, err := cli.GetModuleName()
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
 
-	cli.HandleCommonArgs(app, "hdfs", "Example DC/OS CLI Module", []string{"foo", "bar"})
-	handleExampleSection(app)
+	app, err := cli.NewApp(
+		"0.1.0",
+		"Mesosphere",
+		fmt.Sprintf("Deploy and manage %s clusters", strings.Title(modName)))
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+
+	handleNodeSection(app, modName)
+	cli.HandleCommonArgs(
+		app,
+		modName,
+		fmt.Sprintf("%s DC/OS CLI Module", strings.Title(modName)),
+		[]string{"hdfs-site.xml", "core-site.xml"})
 
 	// Omit modname:
-	kingpin.MustParse(app.Parse(cli.GetArguments()))
+	kingpin.MustParse(app.Parse(os.Args[2:]))
 }
 
-type ExampleCommand struct {
-	echoText        []string
-	echoOmitNewline bool
+type NodeHandler struct {
+	name string
 }
 
-func (cmd *ExampleCommand) runEcho(c *kingpin.ParseContext) error {
-	if cmd.echoOmitNewline {
-		fmt.Printf(strings.Join(cmd.echoText, " "))
-	} else {
-		fmt.Printf("%s\n", strings.Join(cmd.echoText, " "))
-	}
+func (cmd *NodeHandler) runReplace(c *kingpin.ParseContext) error {
+	query := url.Values{}
+	query.Set("replace", "true")
+	cli.HTTPPostQuery(fmt.Sprintf("v1/tasks/restart/%s", cmd.name), query.Encode())
 	return nil
 }
 
-func handleExampleSection(app *kingpin.Application) {
-	// example echo -n <text>, example ping <host/ip>
-	cmd := &ExampleCommand{}
-	example := app.Command("example", "Example custom commands")
+func (cmd *NodeHandler) runRestart(c *kingpin.ParseContext) error {
+	query := url.Values{}
+	query.Set("replace", "false")
+	cli.HTTPPostQuery(fmt.Sprintf("v1/tasks/restart/%s", cmd.name), query.Encode())
+	return nil
+}
 
-	echo := example.Command("echo", "Echos some text").Action(cmd.runEcho)
-	echo.Arg("text", "What to echo").StringsVar(&cmd.echoText)
-	echo.Flag("no-newline", "Omit newline").Short('n').BoolVar(&cmd.echoOmitNewline)
+func handleNodeSection(app *kingpin.Application, modName string) {
+	cmd := &NodeHandler{}
+	stateCmd := &cli.StateHandler{}
+
+	node := app.Command("node", fmt.Sprintf("Manage %s nodes", modName))
+
+	node.Command("list", "Lists all nodes").Action(stateCmd.RunTasks)
+
+	replace := node.Command("replace", "Replaces a single task job, moving it to a different agent").Action(cmd.runReplace)
+	replace.Arg("node", "The task name to replace").StringVar(&cmd.name)
+
+	restart := node.Command("restart", "Restarts a single task job, keeping it on the same agent").Action(cmd.runRestart)
+	restart.Arg("node", "The task name to restart").StringVar(&cmd.name)
 }
