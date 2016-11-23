@@ -1,7 +1,11 @@
 package org.apache.mesos.executor;
 
 import org.apache.mesos.Protos;
+import org.apache.mesos.specification.RLimitSpec;
+import org.apache.mesos.specification.util.RLimit;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -9,6 +13,26 @@ import java.util.UUID;
  */
 public class ExecutorUtils {
     private static final String EXECUTOR_NAME_DELIM = "__";
+    private static final Map<String, Protos.RLimitInfo.RLimit.Type> RLIMIT_TYPE_MAP = new HashMap<>();
+
+    static {
+        RLIMIT_TYPE_MAP.put("RLIMIT_AS", Protos.RLimitInfo.RLimit.Type.RLMT_AS);
+        RLIMIT_TYPE_MAP.put("RLIMIT_CORE", Protos.RLimitInfo.RLimit.Type.RLMT_CORE);
+        RLIMIT_TYPE_MAP.put("RLIMIT_CPU", Protos.RLimitInfo.RLimit.Type.RLMT_CPU);
+        RLIMIT_TYPE_MAP.put("RLIMIT_DATA", Protos.RLimitInfo.RLimit.Type.RLMT_DATA);
+        RLIMIT_TYPE_MAP.put("RLIMIT_FSIZE", Protos.RLimitInfo.RLimit.Type.RLMT_FSIZE);
+        RLIMIT_TYPE_MAP.put("RLIMIT_LOCKS", Protos.RLimitInfo.RLimit.Type.RLMT_LOCKS);
+        RLIMIT_TYPE_MAP.put("RLIMIT_MEMLOCK", Protos.RLimitInfo.RLimit.Type.RLMT_MEMLOCK);
+        RLIMIT_TYPE_MAP.put("RLIMIT_MSGQUEUE", Protos.RLimitInfo.RLimit.Type.RLMT_MSGQUEUE);
+        RLIMIT_TYPE_MAP.put("RLIMIT_NICE", Protos.RLimitInfo.RLimit.Type.RLMT_NICE);
+        RLIMIT_TYPE_MAP.put("RLIMIT_NOFILE", Protos.RLimitInfo.RLimit.Type.RLMT_NOFILE);
+        RLIMIT_TYPE_MAP.put("RLIMIT_NPROC", Protos.RLimitInfo.RLimit.Type.RLMT_NPROC);
+        RLIMIT_TYPE_MAP.put("RLIMIT_RSS", Protos.RLimitInfo.RLimit.Type.RLMT_RSS);
+        RLIMIT_TYPE_MAP.put("RLIMIT_RTPRIO", Protos.RLimitInfo.RLimit.Type.RLMT_RTPRIO);
+        RLIMIT_TYPE_MAP.put("RLIMIT_RTTIME", Protos.RLimitInfo.RLimit.Type.RLMT_RTTIME);
+        RLIMIT_TYPE_MAP.put("RLIMIT_SIGPENDING", Protos.RLimitInfo.RLimit.Type.RLMT_SIGPENDING);
+        RLIMIT_TYPE_MAP.put("RLIMIT_STACK", Protos.RLimitInfo.RLimit.Type.RLMT_STACK);
+    }
 
     private ExecutorUtils() {
         // do not instantiate
@@ -41,5 +65,23 @@ public class ExecutorUtils {
         return Protos.ExecutorID.newBuilder()
                 .setValue(executorName + EXECUTOR_NAME_DELIM + UUID.randomUUID())
                 .build();
+    }
+
+    public static Protos.RLimitInfo getRLimitInfo(RLimitSpec rLimitSpec) {
+        Protos.RLimitInfo.Builder rLimitInfoBuilder = Protos.RLimitInfo.newBuilder();
+
+        for (RLimit rLimit : rLimitSpec.getRLimits()) {
+            Long soft = rLimit.getSoft();
+            Long hard = rLimit.getHard();
+            Protos.RLimitInfo.RLimit.Builder rLimitsBuilder = Protos.RLimitInfo.RLimit.newBuilder()
+                    .setType(RLIMIT_TYPE_MAP.get(rLimit.getName()));
+
+            if (soft >= 0 && hard >= 0) {
+                rLimitsBuilder.setSoft(soft).setHard(hard);
+            }
+            rLimitInfoBuilder.addRlimits(rLimitsBuilder);
+        }
+
+        return rLimitInfoBuilder.build();
     }
 }

@@ -2,6 +2,7 @@ package org.apache.mesos.offer;
 
 import org.apache.mesos.Protos;
 import org.apache.mesos.config.TaskConfigRouter;
+import org.apache.mesos.executor.ExecutorUtils;
 import org.apache.mesos.specification.*;
 import org.apache.mesos.state.StateStore;
 import org.slf4j.Logger;
@@ -317,6 +318,22 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
         return volumes;
     }
 
+    private Protos.ContainerInfo getContainerInfo(ContainerSpec containerSpec) {
+        Protos.ContainerInfo.Builder containerInfo = Protos.ContainerInfo.newBuilder()
+                .setType(Protos.ContainerInfo.Type.MESOS);
+
+        if (containerSpec.getImageName().isPresent()) {
+                containerInfo.setDocker(Protos.ContainerInfo.DockerInfo.newBuilder()
+                    .setImage(containerSpec.getImageName().get()));
+        }
+
+        if (containerSpec.getRLimitSpec().isPresent()) {
+            containerInfo.setRlimitInfo(ExecutorUtils.getRLimitInfo(containerSpec.getRLimitSpec().get()));
+        }
+
+        return containerInfo.build();
+    }
+
     private Protos.ExecutorInfo.Builder getNewExecutorInfo(PodSpec podSpec) throws IllegalStateException {
         Protos.CommandInfo.URI executorURI;
         Protos.ExecutorInfo.Builder executorInfoBuilder = Protos.ExecutorInfo.newBuilder()
@@ -324,12 +341,7 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
                 .setExecutorId(Protos.ExecutorID.newBuilder().setValue("").build()); // Set later by ExecutorRequirement
 
         if (podSpec.getContainer().isPresent()) {
-            executorInfoBuilder.setContainer(
-                    Protos.ContainerInfo.newBuilder()
-                            .setType(Protos.ContainerInfo.Type.MESOS)
-                            .setDocker(Protos.ContainerInfo.DockerInfo.newBuilder()
-                                .setImage(podSpec.getContainer().get().getImageName()))
-            );
+            executorInfoBuilder.setContainer(getContainerInfo(podSpec.getContainer().get()));
         }
 
         String executorStr = System.getenv(EXECUTOR_URI);

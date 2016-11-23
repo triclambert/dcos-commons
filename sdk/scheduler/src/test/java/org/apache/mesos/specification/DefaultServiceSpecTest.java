@@ -1,6 +1,7 @@
 package org.apache.mesos.specification;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
+import org.apache.mesos.specification.util.RLimit;
 import org.apache.mesos.specification.yaml.RawServiceSpecification;
 import org.apache.mesos.specification.yaml.YAMLServiceSpecFactory;
 import org.junit.Assert;
@@ -115,6 +116,15 @@ public class DefaultServiceSpecTest {
                 Assert.assertTrue(constraintViolations.size() > 0);
             }
         }
+    }
+
+    @Test(expected = RLimit.InvalidRLimitException.class)
+    public void invalidRLimitName() throws Exception {
+        environmentVariables.set("PORT0", "8080");
+        ClassLoader classLoader = getClass().getClassLoader();
+        File file = new File(classLoader.getResource("invalid-rlimit-name.yml").getFile());
+        YAMLServiceSpecFactory
+                .generateServiceSpec(YAMLServiceSpecFactory.generateRawSpecFromYAML(file));
     }
 
     @Test
