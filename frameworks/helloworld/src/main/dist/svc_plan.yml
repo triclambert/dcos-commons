@@ -1,73 +1,82 @@
-name: "hello-world"
-principal: "hello-world-principal"
+name: "data-store"
+principal: "data-store-principal"
 zookeeper: master.mesos:2181
-api-port: 8080
+api-port: {{PORT0}}
 pods:
-  hello:
+  journal:
+    count: 3
+    resource-sets:
+      journal-resources:
+        cpus: 0.1
+        memory: 512
+        volumes:
+          - path: "journal-data"
+            type: ROOT
+            size: 5000
+    tasks:
+      node:
+        goal: RUNNING
+        cmd: "echo journal >> journal-data/output && sleep $SLEEP_DURATION"
+        resource-set: journal-resources
+        env:
+          SLEEP_DURATION: "1000"
+  name:
     count: 2
     resource-sets:
-      hello-resources:
-        cpus: 1
-        memory: 256
-        ports:
-          - name: http
-            port: 8080
+      data-store-resources:
+        cpus: 0.1
+        memory: 512
         volumes:
-          - path: "hello-container-path"
+          - path: "name-data"
             type: ROOT
-            size: 1024
-      once-resources:
-        cpus: 1
-        memory: 256
-        volumes:
-          - path: "once-container-path"
-            type: ROOT
-            size: 1024
+            size: 5000
     tasks:
-      server:
+      data-store-task:
         goal: RUNNING
-        cmd: "echo $TASK_NAME >> hello-container-path/output && sleep $SLEEP_DURATION"
-        resource-set: hello-resources
+        cmd: "echo name >> name-data/output && sleep $SLEEP_DURATION"
+        resource-set: data-store-resources
         env:
-          SLEEP_DURATION: 1000
-      once:
-        goal: FINISHED
-        cmd: "echo 'I run only once' >> once-container-path/runonce"
-        resource-set: once-resources
-  world:
+          SLEEP_DURATION: "1000"
+  zkfc:
     count: 2
     resource-sets:
-      world-resources:
-        cpus: 1
-        memory: 256
-        ports:
-          - name: http
-            port: 8080
+      data-store-resources:
+        cpus: 0.1
+        memory: 512
         volumes:
-          - path: "world-container-path"
+          - path: "name-data"
             type: ROOT
-            size: 1024
+            size: 5000
     tasks:
-      server:
+      data-store-task:
         goal: RUNNING
-        cmd: "echo $TASK_NAME >> world-container-path/output && sleep $SLEEP_DURATION"
-        resource-set: world-resources
+        cmd: "echo name >> name-data/output && sleep $SLEEP_DURATION"
+        resource-set: data-store-resources
         env:
-          SLEEP_DURATION: 1000
+          SLEEP_DURATION: "1000"
 
 plans:
   deploy:
     strategy: serial
     phases:
-      hello-deploy:
+      journal-deploy:
         strategy: serial
-        pod: hello
+        pod: journal
+      nn-deploy:
+        strategy: serial
+        pod: nn
         steps:
           - podInstance: 0
-            tasks: [once, server]
-      world-deploy:
-        strategy: serial
-        pod: world
-        steps:
+            tasks: [format]
+          - podInstance: 0
+            tasks: [server]
+          - podInstance: 1
+            tasks: [format]
           - podInstance: 1
             tasks: [server]
+      dn-deploy:
+        strategy: serial
+        pod: dn
+        steps:
+          - tasks: [format]
+          - tasks: [blah]

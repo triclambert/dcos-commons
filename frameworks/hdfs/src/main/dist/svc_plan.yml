@@ -1,0 +1,73 @@
+name: "hdfs"
+principal: "hdfs-principal"
+zookeeper: master.mesos:2181
+api-port: 8080
+pods:
+  hdfs:
+    count: 2
+    resource-sets:
+      hdfs-resources:
+        cpus: 1
+        memory: 256
+        ports:
+          - name: http
+            port: 8080
+        volumes:
+          - path: "hdfs-container-path"
+            type: ROOT
+            size: 1024
+      once-resources:
+        cpus: 1
+        memory: 256
+        volumes:
+          - path: "once-container-path"
+            type: ROOT
+            size: 1024
+    tasks:
+      server:
+        goal: RUNNING
+        cmd: "echo $TASK_NAME >> hdfs-container-path/output && sleep $SLEEP_DURATION"
+        resource-set: hdfs-resources
+        env:
+          SLEEP_DURATION: 1000
+      once:
+        goal: FINISHED
+        cmd: "echo 'I run only once' >> once-container-path/runonce"
+        resource-set: once-resources
+  world:
+    count: 2
+    resource-sets:
+      world-resources:
+        cpus: 1
+        memory: 256
+        ports:
+          - name: http
+            port: 8080
+        volumes:
+          - path: "world-container-path"
+            type: ROOT
+            size: 1024
+    tasks:
+      server:
+        goal: RUNNING
+        cmd: "echo $TASK_NAME >> world-container-path/output && sleep $SLEEP_DURATION"
+        resource-set: world-resources
+        env:
+          SLEEP_DURATION: 1000
+
+plans:
+  deploy:
+    strategy: serial
+    phases:
+      hdfs-deploy:
+        strategy: serial
+        pod: hdfs
+        steps:
+          - podInstance: 0
+            tasks: [once, server]
+      world-deploy:
+        strategy: serial
+        pod: world
+        steps:
+          - podInstance: 1
+            tasks: [server]

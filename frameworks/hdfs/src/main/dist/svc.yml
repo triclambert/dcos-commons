@@ -1,0 +1,17 @@
+name: "hdfs"
+principal: "hdfs-principal"
+zookeeper: master.mesos:2181
+api-port: 8080
+pods:
+  hdfs:
+    count: {{COUNT}}
+    tasks:
+      server:
+        goal: RUNNING
+        cmd: "echo hdfs >> hdfs-container-path/output && sleep 1000"
+        cpus: {{CPUS}}
+        memory: 256
+        volumes:
+          - path: "hdfs-container-path"
+            type: ROOT
+            size: 5000
