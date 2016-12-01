@@ -16,22 +16,22 @@ public class ExecutorUtils {
     private static final Map<String, Protos.RLimitInfo.RLimit.Type> RLIMIT_TYPE_MAP = new HashMap<>();
 
     static {
-        RLIMIT_TYPE_MAP.put("RLIMIT_AS", Protos.RLimitInfo.RLimit.Type.RLMT_AS);
-        RLIMIT_TYPE_MAP.put("RLIMIT_CORE", Protos.RLimitInfo.RLimit.Type.RLMT_CORE);
-        RLIMIT_TYPE_MAP.put("RLIMIT_CPU", Protos.RLimitInfo.RLimit.Type.RLMT_CPU);
-        RLIMIT_TYPE_MAP.put("RLIMIT_DATA", Protos.RLimitInfo.RLimit.Type.RLMT_DATA);
-        RLIMIT_TYPE_MAP.put("RLIMIT_FSIZE", Protos.RLimitInfo.RLimit.Type.RLMT_FSIZE);
-        RLIMIT_TYPE_MAP.put("RLIMIT_LOCKS", Protos.RLimitInfo.RLimit.Type.RLMT_LOCKS);
-        RLIMIT_TYPE_MAP.put("RLIMIT_MEMLOCK", Protos.RLimitInfo.RLimit.Type.RLMT_MEMLOCK);
-        RLIMIT_TYPE_MAP.put("RLIMIT_MSGQUEUE", Protos.RLimitInfo.RLimit.Type.RLMT_MSGQUEUE);
-        RLIMIT_TYPE_MAP.put("RLIMIT_NICE", Protos.RLimitInfo.RLimit.Type.RLMT_NICE);
-        RLIMIT_TYPE_MAP.put("RLIMIT_NOFILE", Protos.RLimitInfo.RLimit.Type.RLMT_NOFILE);
-        RLIMIT_TYPE_MAP.put("RLIMIT_NPROC", Protos.RLimitInfo.RLimit.Type.RLMT_NPROC);
-        RLIMIT_TYPE_MAP.put("RLIMIT_RSS", Protos.RLimitInfo.RLimit.Type.RLMT_RSS);
-        RLIMIT_TYPE_MAP.put("RLIMIT_RTPRIO", Protos.RLimitInfo.RLimit.Type.RLMT_RTPRIO);
-        RLIMIT_TYPE_MAP.put("RLIMIT_RTTIME", Protos.RLimitInfo.RLimit.Type.RLMT_RTTIME);
-        RLIMIT_TYPE_MAP.put("RLIMIT_SIGPENDING", Protos.RLimitInfo.RLimit.Type.RLMT_SIGPENDING);
-        RLIMIT_TYPE_MAP.put("RLIMIT_STACK", Protos.RLimitInfo.RLimit.Type.RLMT_STACK);
+        RLIMIT_TYPE_MAP.put(RLimit.AS, Protos.RLimitInfo.RLimit.Type.RLMT_AS);
+        RLIMIT_TYPE_MAP.put(RLimit.CORE, Protos.RLimitInfo.RLimit.Type.RLMT_CORE);
+        RLIMIT_TYPE_MAP.put(RLimit.CPU, Protos.RLimitInfo.RLimit.Type.RLMT_CPU);
+        RLIMIT_TYPE_MAP.put(RLimit.DATA, Protos.RLimitInfo.RLimit.Type.RLMT_DATA);
+        RLIMIT_TYPE_MAP.put(RLimit.FSIZE, Protos.RLimitInfo.RLimit.Type.RLMT_FSIZE);
+        RLIMIT_TYPE_MAP.put(RLimit.LOCKS, Protos.RLimitInfo.RLimit.Type.RLMT_LOCKS);
+        RLIMIT_TYPE_MAP.put(RLimit.MEMLOCK, Protos.RLimitInfo.RLimit.Type.RLMT_MEMLOCK);
+        RLIMIT_TYPE_MAP.put(RLimit.MSGQUEUE, Protos.RLimitInfo.RLimit.Type.RLMT_MSGQUEUE);
+        RLIMIT_TYPE_MAP.put(RLimit.NICE, Protos.RLimitInfo.RLimit.Type.RLMT_NICE);
+        RLIMIT_TYPE_MAP.put(RLimit.NOFILE, Protos.RLimitInfo.RLimit.Type.RLMT_NOFILE);
+        RLIMIT_TYPE_MAP.put(RLimit.NPROC, Protos.RLimitInfo.RLimit.Type.RLMT_NPROC);
+        RLIMIT_TYPE_MAP.put(RLimit.RSS, Protos.RLimitInfo.RLimit.Type.RLMT_RSS);
+        RLIMIT_TYPE_MAP.put(RLimit.RTPRIO, Protos.RLimitInfo.RLimit.Type.RLMT_RTPRIO);
+        RLIMIT_TYPE_MAP.put(RLimit.RTTIME, Protos.RLimitInfo.RLimit.Type.RLMT_RTTIME);
+        RLIMIT_TYPE_MAP.put(RLimit.SIGPENDING, Protos.RLimitInfo.RLimit.Type.RLMT_SIGPENDING);
+        RLIMIT_TYPE_MAP.put(RLimit.STACK, Protos.RLimitInfo.RLimit.Type.RLMT_STACK);
     }
 
     private ExecutorUtils() {
