@@ -1,10 +1,13 @@
 package org.apache.mesos.state;
 
 import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.TaskStatus;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Optional;
 
 /**
  * A {@code StateStore} stores the state of the frameworks, including tasks' TaskInfo and TaskStatus objects. Each
@@ -140,6 +143,15 @@ public interface StateStore {
      *                             information otherwise fails
      */
     Optional<TaskStatus> fetchStatus(String taskName) throws StateStoreException;
+
+
+    // Read/Write Resources
+
+
+    void storeResources(Collection<Resource> resources) throws StateStoreException;
+
+    Collection<Resource> fetchResourceSet(String podName, Integer podIndex, String resourceSet)
+            throws StateStoreException;
 
 
     // Read/Write Properties

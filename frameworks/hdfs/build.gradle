@@ -1,4 +1,4 @@
-group 'com.mesosphere.sdk'
+group 'com.mesosphere.sdk.hdfs'
 version '1.0-SNAPSHOT'
 
 apply plugin: 'java'

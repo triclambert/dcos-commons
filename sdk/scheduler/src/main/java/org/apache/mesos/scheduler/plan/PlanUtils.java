@@ -98,6 +98,10 @@ public class PlanUtils {
             result = Status.PREPARED;
             LOGGER.info("({} status={}) At least one element has status '{}' and one has status '{}'",
                     parent.getName(), result, Status.COMPLETE, Status.PENDING);
+        } else if (anyHaveStatus(Status.STARTING, children)) {
+            result = Status.STARTING;
+            LOGGER.info("({} status={}) At least one element has status '{}' and one has status '{}'",
+                    parent.getName(), result, Status.STARTING, Status.STARTING);
         } else {
             result = Status.ERROR;
             LOGGER.error("({} status={}) Unexpected state. PlanElements: {}",

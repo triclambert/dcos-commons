@@ -365,13 +365,32 @@ public class ResourceUtils {
     }
 
     public static String getResourceId(Resource resource) {
-        if (resource.hasReservation() && resource.getReservation().hasLabels()) {
-            for (Label label : resource.getReservation().getLabels().getLabelsList()) {
-                if (label.getKey().equals(MesosResource.RESOURCE_ID_KEY)) {
+        return getLabelValue(resource, MesosResource.RESOURCE_ID_KEY);
+    }
+
+    public static String getResourceSetName(Resource resource) {
+        return getLabelValue(resource, MesosResource.RESOURCE_SET_NAME_KEY);
+    }
+
+    public static String getPodName(Resource resource) {
+        return getLabelValue(resource, TaskUtils.TYPE_KEY);
+    }
+
+    public static int getPodIndex(Resource resource) {
+        return Integer.valueOf(getLabelValue(resource, TaskUtils.INDEX_KEY));
+    }
+
+    private static String getLabelValue(Resource resource, String key) {
+        if (resource.hasReservation()) {
+            Labels labels = resource.getReservation().getLabels();
+
+            for (Label label : labels.getLabelsList()) {
+                if (label.getKey().equals(key)) {
                     return label.getValue();
                 }
             }
         }
+
         return null;
     }
 

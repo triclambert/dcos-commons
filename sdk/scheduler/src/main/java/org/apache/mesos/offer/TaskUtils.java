@@ -47,8 +47,8 @@ public class TaskUtils {
     /**
      * Label key against which the Task Type is stored.
      */
-    private static final String TYPE_KEY = "task_type";
-    private static final String INDEX_KEY = "index";
+    public static final String TYPE_KEY = "task_type";
+    public static final String INDEX_KEY = "index";
 
     private TaskUtils() {
         // do not instantiate
@@ -188,6 +188,7 @@ public class TaskUtils {
     public static String getType(TaskInfo taskInfo) throws TaskException {
         Optional<String> taskType = findLabelValue(taskInfo.getLabels(), TYPE_KEY);
         if (!taskType.isPresent()) {
+            LOGGER.error("TaskInfo: {} does not contain a label indicating type.", taskInfo);
             throw new TaskException("TaskInfo does not contain label with key: " + TYPE_KEY);
         }
         return taskType.get();
@@ -303,6 +304,7 @@ public class TaskUtils {
     }
 
     public static List<String> getTaskNames(PodInstance podInstance, List<String> tasksToLaunch) {
+        LOGGER.info("PodInstance tasks: {}", TaskUtils.getTaskNames(podInstance));
         return podInstance.getPod().getTasks().stream()
                 .filter(taskSpec -> tasksToLaunch.contains(taskSpec.getName()))
                 .map(taskSpec -> TaskSpec.getInstanceName(podInstance, taskSpec))
@@ -912,16 +914,32 @@ public class TaskUtils {
 
         return TaskSpec.GoalState.valueOf(goalStateString);
     }
+    public static List<String> getTasksToLaunch(
+            PodInstance podInstance,
+            StateStore stateStore) {
+        List<String> tasksToLaunch = podInstance.getPod().getTasks().stream()
+                .map(taskSpec -> taskSpec.getName())
+                .collect(Collectors.toList());
 
-    public static List<String> getTasksToLaunch(PodInstance podInstance, StateStore stateStore) {
+        return getTasksToLaunch(podInstance, stateStore,tasksToLaunch);
+    }
 
-        List<String> runningTasksToLaunch = podInstance.getPod().getTasks().stream()
+    public static List<String> getTasksToLaunch(
+            PodInstance podInstance,
+            StateStore stateStore,
+            List<String> tasksToLaunch) {
+
+        List<TaskSpec> tasks = podInstance.getPod().getTasks().stream()
+                .filter(taskSpec -> tasksToLaunch.contains(taskSpec.getName()))
+                .collect(Collectors.toList());
+
+        List<String> runningTasksToLaunch = tasks.stream()
                 .filter(taskSpec -> taskSpec.getGoal().equals(TaskSpec.GoalState.RUNNING))
                 .map(taskSpec -> taskSpec.getName())
                 .collect(Collectors.toList());
 
 
-        List<TaskSpec> finishedTaskSpecs = podInstance.getPod().getTasks().stream()
+        List<TaskSpec> finishedTaskSpecs = tasks.stream()
                 .filter(taskSpec -> taskSpec.getGoal().equals(TaskSpec.GoalState.FINISHED))
                 .collect(Collectors.toList());
 
@@ -942,10 +960,10 @@ public class TaskUtils {
             }
         }
 
-        List<String> tasksToLaunch = new ArrayList<>();
-        tasksToLaunch.addAll(runningTasksToLaunch);
-        tasksToLaunch.addAll(finishedTasksToLaunch);
+        List<String> updatedTasksToLaunch = new ArrayList<>();
+        updatedTasksToLaunch.addAll(runningTasksToLaunch);
+        updatedTasksToLaunch.addAll(finishedTasksToLaunch);
 
-        return tasksToLaunch;
+        return updatedTasksToLaunch;
     }
 }

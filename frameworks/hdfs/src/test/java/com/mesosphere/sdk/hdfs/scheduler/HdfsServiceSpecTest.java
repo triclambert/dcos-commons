@@ -21,7 +21,7 @@ import java.util.Collections;
 
 import static org.apache.mesos.specification.yaml.YAMLServiceSpecFactory.generateRawSpecFromYAML;
 
-public class HelloWorldServiceSpecTest {
+public class HdfsServiceSpecTest {
     @ClassRule
     public static final EnvironmentVariables environmentVariables = new EnvironmentVariables();
 
@@ -32,23 +32,12 @@ public class HelloWorldServiceSpecTest {
     public static void beforeAll() {
         environmentVariables.set("EXECUTOR_URI", "");
         environmentVariables.set("LIBMESOS_URI", "");
-        environmentVariables.set("COUNT", "2");
-        environmentVariables.set("CPUS", "0.1");
+        environmentVariables.set("PORT0", "8080");
     }
 
     @Before
     public void beforeEach() {
         MockitoAnnotations.initMocks(this);
-    }
-
-    @Test
-    public void testDefaultDeserialization() throws Exception {
-        testDeserialization("svc.yml");
-    }
-
-    @Test
-    public void testDefaultValidation() throws Exception {
-        testValidation("svc.yml");
     }
 
     @Test

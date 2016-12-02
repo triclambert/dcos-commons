@@ -46,7 +46,7 @@ public class OfferRequirement {
         return new OfferRequirement(
                 taskType,
                 index,
-                getTaskRequirementsInternal(taskInfos),
+                getTaskRequirementsInternal(taskInfos, taskType, index),
                 executorInfoOptional.isPresent() ?
                         Optional.of(ExecutorRequirement.create(executorInfoOptional.get())) :
                         Optional.empty(),
@@ -160,10 +160,13 @@ public class OfferRequirement {
     }
 
     private static Collection<TaskRequirement> getTaskRequirementsInternal(
-            Collection<TaskInfo> taskInfos) throws InvalidRequirementException {
+            Collection<TaskInfo> taskInfos, String type, Integer index) throws InvalidRequirementException {
         Collection<TaskRequirement> taskRequirements = new ArrayList<TaskRequirement>();
         for (TaskInfo taskInfo : taskInfos) {
-            taskRequirements.add(new TaskRequirement(taskInfo));
+            TaskInfo.Builder taskBuilder = taskInfo.toBuilder();
+            taskBuilder = TaskUtils.setType(taskBuilder, type);
+            taskBuilder = TaskUtils.setIndex(taskBuilder, index);
+            taskRequirements.add(new TaskRequirement(taskBuilder.build()));
         }
         return taskRequirements;
     }

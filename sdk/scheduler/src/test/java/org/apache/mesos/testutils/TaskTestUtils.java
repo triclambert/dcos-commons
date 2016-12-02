@@ -22,6 +22,7 @@ public class TaskTestUtils {
                 .setCommand(TestConstants.COMMAND_INFO)
                 .setContainer(TestConstants.CONTAINER_INFO);
         builder = TaskUtils.setType(builder, TestConstants.TASK_TYPE);
+        builder = TaskUtils.setIndex(builder, 0);
         return builder.addAllResources(resources).build();
     }
 

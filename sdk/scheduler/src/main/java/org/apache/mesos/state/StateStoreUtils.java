@@ -5,6 +5,7 @@ import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.TaskStatus;
 import org.apache.mesos.config.ConfigStore;
+import org.apache.mesos.offer.MesosResource;
 import org.apache.mesos.offer.TaskException;
 import org.apache.mesos.offer.TaskUtils;
 import org.apache.mesos.specification.ServiceSpec;
@@ -138,5 +139,37 @@ public class StateStoreUtils {
                     "Property value length %d exceeds limit of %d bytes.",
                     value.length, MAX_VALUE_LENGTH_BYTES));
         }
+    }
+
+    public static Collection<Protos.Resource> getResourceSet(
+            Collection<Protos.Resource> resources,
+            String podName,
+            int podIndex,
+            String resourceSet) {
+
+        Collection<Protos.Resource> resourceSetResources = new ArrayList<>();
+        for (Protos.Resource resource : resources) {
+            MesosResource mesosResource = new MesosResource(resource);
+
+            if (mesosResource.getPodName().equals(podName)
+                    && mesosResource.getPodIndex() == podIndex
+                    && mesosResource.getResourceSetName().equals(resourceSet)) {
+                resourceSetResources.add(resource);
+            }
+        }
+
+        return resourceSetResources;
+    }
+
+    public static Collection<Protos.Resource> getReservedResources(Collection<Protos.Resource> resources) {
+        Collection<Protos.Resource> reservedResources = new ArrayList<>();
+        for (Protos.Resource resource : resources) {
+            MesosResource mesosResource = new MesosResource(resource);
+            if (mesosResource.hasResourceId()) {
+                reservedResources.add(resource);
+            }
+        }
+
+        return reservedResources;
     }
 }

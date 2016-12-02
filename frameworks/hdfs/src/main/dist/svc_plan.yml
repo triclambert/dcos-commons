@@ -1,73 +1,102 @@
 name: "hdfs"
 principal: "hdfs-principal"
 zookeeper: master.mesos:2181
-api-port: 8080
+api-port: {{PORT0}}
 pods:
-  hdfs:
+  journal:
+    count: 3
+    tasks:
+      node:
+        goal: RUNNING
+        cmd: "echo journal >> journal-data/output && sleep $SLEEP_DURATION"
+        cpus: 0.1
+        memory: 512
+        volumes:
+          - path: "journal-data"
+            type: ROOT
+            size: 5
+        env:
+          SLEEP_DURATION: "100"
+  name-node:
     count: 2
     resource-sets:
-      hdfs-resources:
-        cpus: 1
-        memory: 256
-        ports:
-          - name: http
-            port: 8080
+      name-resources:
+        cpus: 0.1
+        memory: 512
         volumes:
-          - path: "hdfs-container-path"
+          - path: "name-data"
             type: ROOT
-            size: 1024
-      once-resources:
-        cpus: 1
-        memory: 256
-        volumes:
-          - path: "once-container-path"
-            type: ROOT
-            size: 1024
+            size: 5
     tasks:
-      server:
+      node:
         goal: RUNNING
-        cmd: "echo $TASK_NAME >> hdfs-container-path/output && sleep $SLEEP_DURATION"
-        resource-set: hdfs-resources
+        cmd: "echo node >> name-data/output && sleep $SLEEP_DURATION"
+        resource-set: name-resources
         env:
-          SLEEP_DURATION: 1000
-      once:
+          SLEEP_DURATION: "100"
+      format:
         goal: FINISHED
-        cmd: "echo 'I run only once' >> once-container-path/runonce"
-        resource-set: once-resources
-  world:
-    count: 2
-    resource-sets:
-      world-resources:
-        cpus: 1
-        memory: 256
-        ports:
-          - name: http
-            port: 8080
-        volumes:
-          - path: "world-container-path"
-            type: ROOT
-            size: 1024
-    tasks:
-      server:
-        goal: RUNNING
-        cmd: "echo $TASK_NAME >> world-container-path/output && sleep $SLEEP_DURATION"
-        resource-set: world-resources
+        cmd: "echo format >> name-data/output"
+        resource-set: name-resources
         env:
-          SLEEP_DURATION: 1000
+          SLEEP_DURATION: "100"
+      bootstrap:
+        goal: FINISHED
+        cmd: "echo bootstrap >> name-data/output"
+        resource-set: name-resources
+        env:
+          SLEEP_DURATION: "100"
+  zkfc:
+    count: 2
+    tasks:
+      node:
+        goal: RUNNING
+        cmd: "echo name >> zkfc-data/output && sleep $SLEEP_DURATION"
+        cpus: 0.1
+        memory: 512
+        volumes:
+          - path: "zkfc-data"
+            type: ROOT
+            size: 5
+        env:
+          SLEEP_DURATION: "100"
+  data:
+    count: 2
+    tasks:
+      node:
+        goal: RUNNING
+        cmd: "echo name >> data-data/output && sleep $SLEEP_DURATION"
+        cpus: 0.1
+        memory: 512
+        volumes:
+          - path: "data-data"
+            type: ROOT
+            size: 5
+        env:
+          SLEEP_DURATION: "100"
 
 plans:
   deploy:
     strategy: serial
     phases:
-      hdfs-deploy:
+      jn-deploy:
+        strategy: parallel
+        pod: journal
+      nn-deploy:
         strategy: serial
-        pod: hdfs
+        pod: name
         steps:
           - podInstance: 0
-            tasks: [once, server]
-      world-deploy:
-        strategy: serial
-        pod: world
-        steps:
+            tasks: [format]
+          - podInstance: 0
+            tasks: [node]
           - podInstance: 1
-            tasks: [server]
+            tasks: [bootstrap]
+          - podInstance: 1
+            tasks: [node]
+      zkfc-deploy:
+        strategy: parallel
+        pod: zkfc
+      dn-deploy:
+        strategy: parallel
+        pod: data

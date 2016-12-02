@@ -40,7 +40,7 @@ public class DefaultStepFactory implements StepFactory {
             throws Step.InvalidStepException, InvalidRequirementException {
 
         LOGGER.info("Generating step for pod: {}, with tasks: {}", podInstance.getName(), tasksToLaunch);
-        tasksToLaunch = TaskUtils.getTasksToLaunch(podInstance, stateStore);
+        tasksToLaunch = TaskUtils.getTasksToLaunch(podInstance, stateStore, tasksToLaunch);
         validate(podInstance, tasksToLaunch);
 
         List<Protos.TaskInfo> taskInfos = TaskUtils.getTaskNames(podInstance).stream()
@@ -49,11 +49,12 @@ public class DefaultStepFactory implements StepFactory {
                 .map(taskInfoOptional -> taskInfoOptional.get())
                 .collect(Collectors.toList());
 
+        String stepName = podInstance.getName() + ":" + tasksToLaunch;
         try {
             if (taskInfos.isEmpty()) {
-                LOGGER.info("Generating new step for: {}", podInstance.getName());
+                LOGGER.info("Generating new step: {}", stepName);
                 return new DefaultStep(
-                        podInstance.getName(),
+                        stepName,
                         Optional.of(offerRequirementProvider.getNewOfferRequirement(podInstance, tasksToLaunch)),
                         Status.PENDING,
                         podInstance,
@@ -72,9 +73,9 @@ public class DefaultStepFactory implements StepFactory {
                         .filter(taskInfo -> fullTaskNamesToLaunch.contains(taskInfo.getName()))
                         .collect(Collectors.toList());
                 Status status = getStatus(podInstance, taskInfos);
-                LOGGER.info("Generating existing step for: {} with status: {}", podInstance.getName(), status);
+                LOGGER.info("Generating existing step: {} with status: {}", stepName, status);
                 return new DefaultStep(
-                        podInstance.getName(),
+                        stepName,
                         Optional.of(offerRequirementProvider.getExistingOfferRequirement(podInstance, tasksToLaunch)),
                         status,
                         podInstance,
