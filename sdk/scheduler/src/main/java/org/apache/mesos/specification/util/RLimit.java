@@ -5,6 +5,7 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -73,12 +74,12 @@ public class RLimit {
         return name;
     }
 
-    public Long getSoft() {
-        return soft;
+    public Optional<Long> getSoft() {
+        return Optional.ofNullable(soft);
     }
 
-    public Long getHard() {
-        return hard;
+    public Optional<Long> getHard() {
+        return Optional.ofNullable(hard);
     }
 
     private void validate() throws InvalidRLimitException {
@@ -86,11 +87,11 @@ public class RLimit {
             throw new InvalidRLimitException(name + " is not a valid rlimit");
         }
 
-        if (!(soft == -1 && hard == -1) && !(soft != -1 && hard != -1)) {
+        if (!(soft == null && hard == null) && !(soft != null && hard != null)) {
             throw new InvalidRLimitException("soft and hard rlimits must be either both set or both unset");
         }
 
-        if (soft > hard || soft < hard && soft == -1) {
+        if (soft != null && soft > hard) {
             throw new InvalidRLimitException("soft rlimit must be less than or equal to the hard rlimit");
         }
     }

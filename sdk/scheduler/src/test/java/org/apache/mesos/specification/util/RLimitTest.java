@@ -9,16 +9,16 @@ public class RLimitTest {
         RLimit rlimit = new RLimit(RLimit.AS, 0L, 1L);
 
         Assert.assertEquals(rlimit.getName(), "RLIMIT_AS");
-        Assert.assertEquals(rlimit.getSoft(), Long.valueOf(0));
-        Assert.assertEquals(rlimit.getHard(), Long.valueOf(1));
+        Assert.assertEquals(rlimit.getSoft().get(), Long.valueOf(0));
+        Assert.assertEquals(rlimit.getHard().get(), Long.valueOf(1));
     }
 
     @Test
     public void testRLimitCreationSucceedsWithUnlimitedLimits() throws RLimit.InvalidRLimitException {
         RLimit rlimit = new RLimit(RLimit.AS, -1L, -1L);
 
-        Assert.assertEquals(rlimit.getSoft(), Long.valueOf(-1));
-        Assert.assertEquals(rlimit.getHard(), Long.valueOf(-1));
+        Assert.assertEquals(rlimit.getSoft().get(), Long.valueOf(-1));
+        Assert.assertEquals(rlimit.getHard().get(), Long.valueOf(-1));
     }
 
     @Test(expected = RLimit.InvalidRLimitException.class)

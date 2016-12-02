@@ -1,5 +1,6 @@
 package org.apache.mesos.specification;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -15,8 +16,9 @@ import java.util.Collection;
 public class DefaultRLimitSpec implements RLimitSpec {
     @NotNull
     @Size(min = 1)
-    private Collection<RLimit> rlimits;
+    private final Collection<RLimit> rlimits;
 
+    @JsonCreator
     public DefaultRLimitSpec(@JsonProperty("rlimits") Collection<RLimit> rlimits) {
         this.rlimits = rlimits;
     }

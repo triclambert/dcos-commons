@@ -5,10 +5,15 @@ api-port: 8080
 pods:
   hello:
     count: {{COUNT}}
+    container:
+      rlimits:
+        RLIMIT_MEMLOCK:
+          soft: 32
+          hard: 32
     tasks:
       server:
         goal: RUNNING
-        cmd: "echo hello >> hello-container-path/output && sleep 1000"
+        cmd: "ulimit -a && echo hello >> hello-container-path/output && sleep 1000"
         cpus: {{CPUS}}
         memory: 256
         volumes:

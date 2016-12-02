@@ -6,6 +6,7 @@ import org.apache.mesos.specification.util.RLimit;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -71,13 +72,13 @@ public class ExecutorUtils {
         Protos.RLimitInfo.Builder rLimitInfoBuilder = Protos.RLimitInfo.newBuilder();
 
         for (RLimit rLimit : rLimitSpec.getRLimits()) {
-            Long soft = rLimit.getSoft();
-            Long hard = rLimit.getHard();
+            Optional<Long> soft = rLimit.getSoft();
+            Optional<Long> hard = rLimit.getHard();
             Protos.RLimitInfo.RLimit.Builder rLimitsBuilder = Protos.RLimitInfo.RLimit.newBuilder()
                     .setType(RLIMIT_TYPE_MAP.get(rLimit.getName()));
 
-            if (soft >= 0 && hard >= 0) {
-                rLimitsBuilder.setSoft(soft).setHard(hard);
+            if (soft.isPresent() && hard.isPresent()) {
+                rLimitsBuilder.setSoft(soft.get()).setHard(hard.get());
             }
             rLimitInfoBuilder.addRlimits(rLimitsBuilder);
         }
