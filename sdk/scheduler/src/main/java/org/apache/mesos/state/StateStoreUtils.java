@@ -141,6 +141,7 @@ public class StateStoreUtils {
         }
     }
 
+    /*
     public static Collection<Protos.Resource> getResourceSet(
             Collection<Protos.Resource> resources,
             String podName,
@@ -160,6 +161,7 @@ public class StateStoreUtils {
 
         return resourceSetResources;
     }
+    */
 
     public static Collection<Protos.Resource> getReservedResources(Collection<Protos.Resource> resources) {
         Collection<Protos.Resource> reservedResources = new ArrayList<>();

@@ -4,7 +4,6 @@ import org.apache.curator.RetryPolicy;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.mesos.Protos;
 import org.apache.mesos.dcos.DcosConstants;
-import org.apache.mesos.offer.MesosResource;
 import org.apache.mesos.offer.TaskException;
 import org.apache.mesos.offer.TaskUtils;
 import org.apache.mesos.state.*;
@@ -54,7 +53,6 @@ public class CuratorStateStore implements StateStore {
     private static final String TASK_STATUS_PATH_NAME = "TaskStatus";
     private static final String FWK_ID_PATH_NAME = "FrameworkID";
     private static final String PROPERTIES_PATH_NAME = "Properties";
-    private static final String RESOURCES_PATH_NAME = "Resources";
     private static final String TASKS_ROOT_NAME = "Tasks";
     private static final String SUPPRESSED_KEY = "suppressed";
 
@@ -62,7 +60,6 @@ public class CuratorStateStore implements StateStore {
     private final TaskPathMapper taskPathMapper;
     private final String fwkIdPath;
     private final String propertiesPath;
-    private final String resourcesPath;
 
     /**
      * Creates a new {@link StateStore} which uses Curator with a default {@link RetryPolicy} and
@@ -111,7 +108,6 @@ public class CuratorStateStore implements StateStore {
         this.taskPathMapper = new TaskPathMapper(rootPath);
         this.fwkIdPath = CuratorUtils.join(rootPath, FWK_ID_PATH_NAME);
         this.propertiesPath = CuratorUtils.join(rootPath, PROPERTIES_PATH_NAME);
-        this.resourcesPath = CuratorUtils.join(rootPath, RESOURCES_PATH_NAME);
     }
 
     // Framework ID
@@ -328,41 +324,6 @@ public class CuratorStateStore implements StateStore {
         } catch (KeeperException.NoNodeException e) {
             logger.warn("No TaskInfo found for the requested name: " + taskName + " at: " + path);
             return Optional.empty();
-        } catch (Exception e) {
-            throw new StateStoreException(e);
-        }
-    }
-
-    @Override
-    public void storeResources(Collection<Protos.Resource> resources) throws StateStoreException {
-        Map<String, byte[]> resourceBytesMap = new HashMap<>();
-
-        for (Protos.Resource resource : resources) {
-            Collection<Protos.Resource> reservedResources = StateStoreUtils.getReservedResources(resources);
-            MesosResource mesosResource = new MesosResource(resource);
-            String key = mesosResource.getResourceId();
-            String path = CuratorUtils.join(resourcesPath, key);
-            resourceBytesMap.put(path, mesosResource.getResource().toByteArray());
-        }
-
-        try {
-            curator.setMany(resourceBytesMap);
-        } catch (Exception e) {
-            throw new StateStoreException(e);
-        }
-    }
-
-    @Override
-    public Collection<Protos.Resource> fetchResourceSet(String podName, Integer podIndex, String resourceSet)
-            throws StateStoreException {
-        try {
-            Collection<Protos.Resource> resources = new ArrayList<>();
-            for (String resourceId : curator.getChildren(resourcesPath)) {
-                byte [] bytes = curator.get(CuratorUtils.join(resourcesPath, resourceId));
-                resources.add(Protos.Resource.parseFrom(bytes));
-            }
-
-            return StateStoreUtils.getResourceSet(resources, podName, podIndex, resourceSet);
         } catch (Exception e) {
             throw new StateStoreException(e);
         }

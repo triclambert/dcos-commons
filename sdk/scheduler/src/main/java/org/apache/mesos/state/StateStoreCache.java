@@ -8,14 +8,11 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.FrameworkID;
-import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.TaskStatus;
 import org.apache.mesos.curator.CuratorStateStore;
-import org.apache.mesos.offer.MesosResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +48,6 @@ public class StateStoreCache implements StateStore {
     protected Map<String, TaskStatus> nameToStatus = new HashMap<>();
 
     protected Map<String, byte[]> properties = new HashMap<>();
-    protected Map<String, Resource> resources = new HashMap<>();
 
     /**
      * Returns a cache instance. To ensure consistency, only one singleton cache instance may exist
@@ -241,32 +237,6 @@ public class StateStoreCache implements StateStore {
         RLOCK.lock();
         try {
             return Optional.ofNullable(nameToStatus.get(taskName));
-        } finally {
-            RLOCK.unlock();
-        }
-    }
-
-    @Override
-    public void storeResources(Collection<Protos.Resource> resources) throws StateStoreException {
-        RWLOCK.lock();
-        try {
-            store.storeResources(resources);
-
-            for (Resource resource : resources) {
-                MesosResource mesosResource = new MesosResource(resource);
-                this.resources.put(mesosResource.getResourceId(), resource);
-            }
-        } finally {
-            RWLOCK.unlock();
-        }
-    }
-
-    @Override
-    public Collection<Resource> fetchResourceSet(String podName, Integer podIndex, String resourceSet)
-            throws StateStoreException {
-        RLOCK.lock();
-        try {
-            return StateStoreUtils.getResourceSet(resources.values(), podName, podIndex, resourceSet);
         } finally {
             RLOCK.unlock();
         }

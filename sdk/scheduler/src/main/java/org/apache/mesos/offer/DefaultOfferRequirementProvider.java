@@ -114,11 +114,18 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
             PodInstance podInstance,
             List<String> tasksToLaunch) throws InvalidRequirementException {
 
+        LOGGER.info("Getting new TaskInfos for tasks: {}", tasksToLaunch);
+
         List<Protos.TaskInfo> taskInfos = new ArrayList<>();
         for (TaskSpec taskSpec : podInstance.getPod().getTasks()) {
-            if (tasksToLaunch.contains(taskSpec.getName())) {
-                taskInfos.add(getNewTaskInfo(podInstance, taskSpec));
+            LOGGER.info("Generating taskInfo for: {}", taskSpec.getName());
+            Protos.TaskInfo taskInfo = getNewTaskInfo(podInstance, taskSpec);
+            if (!tasksToLaunch.contains(taskSpec.getName())) {
+                LOGGER.info("Marking as transient: {}", taskSpec.getName());
+                taskInfo = TaskUtils.setTransient(taskInfo);
             }
+
+            taskInfos.add(taskInfo);
         }
 
         return taskInfos;

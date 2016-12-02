@@ -1,6 +1,8 @@
 package org.apache.mesos.state;
 
-import org.apache.commons.math.stat.inference.TestUtils;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
+
 import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.FrameworkID;
@@ -10,9 +12,7 @@ import org.apache.mesos.Protos.TaskStatus;
 import org.apache.mesos.curator.CuratorStateStore;
 import org.apache.mesos.offer.TaskUtils;
 import org.apache.mesos.testing.CuratorTestUtils;
-import org.apache.mesos.testutils.ResourceTestUtils;
 import org.apache.mesos.testutils.TaskTestUtils;
-import org.apache.mesos.testutils.TestConstants;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -21,10 +21,15 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.nio.charset.Charset;
-import java.util.*;
-
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * Tests for {@link StateStoreCache}
@@ -213,32 +218,6 @@ public class StateStoreCacheTest {
         doNothing().when(mockStore).storeProperty(PROP_KEY2, PROP_VAL2);
         mockedCache.storeProperty(PROP_KEY2, PROP_VAL2);
         assertArrayEquals(PROP_VAL2, mockedCache.fetchProperty(PROP_KEY2));
-    }
-
-    @Test
-    public void testStoreResourcesSingleThread() {
-        cache.consistencyCheckForTests();
-        assertTrue(cache.fetchResourceSet(TestConstants.POD_TYPE, 0, TestConstants.RESOURCE_SET_ID).isEmpty());
-
-        Collection<Protos.Resource> resources = Arrays.asList(ResourceTestUtils.getDesiredCpu(1.0));
-        cache.storeResources(resources);
-
-        //cache.storeProperty(PROP_KEY, PROP_VAL);
-        //cache.consistencyCheckForTests();
-        //assertEquals(1, cache.fetchPropertyKeys().size());
-        //assertArrayEquals(PROP_VAL, cache.fetchProperty(PROP_KEY));
-        //cache.storeProperty(PROP_KEY2, PROP_VAL2);
-        //cache.consistencyCheckForTests();
-        //assertEquals(2, cache.fetchPropertyKeys().size());
-        //assertArrayEquals(PROP_VAL, cache.fetchProperty(PROP_KEY));
-        //assertArrayEquals(PROP_VAL2, cache.fetchProperty(PROP_KEY2));
-        //cache.clearProperty(PROP_KEY);
-        //cache.consistencyCheckForTests();
-        //assertEquals(1, cache.fetchPropertyKeys().size());
-        //assertArrayEquals(PROP_VAL2, cache.fetchProperty(PROP_KEY2));
-        //cache.clearProperty(PROP_KEY2);
-        //cache.consistencyCheckForTests();
-        //assertTrue(cache.fetchPropertyKeys().isEmpty());
     }
 
     @Test
