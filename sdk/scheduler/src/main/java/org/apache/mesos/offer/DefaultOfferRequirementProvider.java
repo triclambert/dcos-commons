@@ -77,15 +77,15 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
             if (taskInfoOptional.isPresent()) {
                 taskMap.put(taskInfoOptional.get(), taskSpec);
             } else {
-                taskMap.put(
-                        getNewTaskInfo(
+                Protos.TaskInfo taskInfo = getNewTaskInfo(
+                        podInstance,
+                        taskSpec,
+                        StateStoreUtils.getResources(
+                                stateStore,
                                 podInstance,
-                                taskSpec,
-                                StateStoreUtils.getResources(
-                                        stateStore,
-                                        podInstance,
-                                        taskSpec)),
-                        taskSpec);
+                                taskSpec));
+                LOGGER.info("Generated new TaskInfo: {}", taskInfo);
+                taskMap.put(taskInfo, taskSpec);
             }
         }
 
@@ -322,10 +322,6 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
         }
 
         return updatedResources;
-    }
-
-    private static Collection<Protos.Resource> getExistingResources(StateStore stateStore, PodInstance podInstance, TaskSpec taskSpec) {
-        return StateStoreUtils.getResources(stateStore, podInstance, taskSpec);
     }
 
     private static Collection<Protos.Resource> getNewResources(TaskSpec taskSpec)

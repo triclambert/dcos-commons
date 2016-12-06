@@ -88,7 +88,7 @@ public class OfferEvaluator {
 
         PodInstance podInstance = podInstanceRequirement.getPodInstance();
         Collection<String> tasksToLaunch = podInstanceRequirement.getTasksToLaunch();
-        logger.info("Generating step for pod: {}, with tasks: {}", podInstance.getName(), tasksToLaunch);
+        logger.info("Generating OfferRequirement for pod: {}, with tasks: {}", podInstance.getName(), tasksToLaunch);
 
         tasksToLaunch = TaskUtils.getTasksToLaunch(podInstance, stateStore, tasksToLaunch);
 
@@ -98,12 +98,13 @@ public class OfferEvaluator {
                 .map(taskInfoOptional -> taskInfoOptional.get())
                 .collect(Collectors.toList());
 
-        String stepName = podInstance.getName() + ":" + tasksToLaunch;
+        String podTaskNames = podInstance.getName() + ":" + tasksToLaunch;
         try {
             if (taskInfos.isEmpty()) {
-                logger.info("Generating new step: {}", stepName);
+                logger.info("Generating new requirement: {}", podTaskNames);
                 return offerRequirementProvider.getNewOfferRequirement(podInstance, tasksToLaunch);
             } else {
+                logger.info("Generating existing requirement: {}", podTaskNames);
                 return offerRequirementProvider.getExistingOfferRequirement(podInstance, tasksToLaunch);
             }
         } catch (InvalidRequirementException e) {

@@ -303,7 +303,7 @@ public class TaskUtils {
                 .collect(Collectors.toList());
     }
 
-    public static List<String> getTaskNames(PodInstance podInstance, List<String> tasksToLaunch) {
+    public static List<String> getTaskNames(PodInstance podInstance, Collection<String> tasksToLaunch) {
         LOGGER.info("PodInstance tasks: {}", TaskUtils.getTaskNames(podInstance));
         return podInstance.getPod().getTasks().stream()
                 .filter(taskSpec -> tasksToLaunch.contains(taskSpec.getName()))
@@ -920,7 +920,7 @@ public class TaskUtils {
                 .map(taskSpec -> taskSpec.getName())
                 .collect(Collectors.toList());
 
-        return getTasksToLaunch(podInstance, stateStore,tasksToLaunch);
+        return getTasksToLaunch(podInstance, stateStore, tasksToLaunch);
     }
 
     public static Collection<String> getTasksToLaunch(
@@ -928,42 +928,10 @@ public class TaskUtils {
             StateStore stateStore,
             Collection<String> tasksToLaunch) {
 
-        List<TaskSpec> tasks = podInstance.getPod().getTasks().stream()
+        return podInstance.getPod().getTasks().stream()
                 .filter(taskSpec -> tasksToLaunch.contains(taskSpec.getName()))
-                .collect(Collectors.toList());
-
-        List<String> runningTasksToLaunch = tasks.stream()
-                .filter(taskSpec -> taskSpec.getGoal().equals(TaskSpec.GoalState.RUNNING))
                 .map(taskSpec -> taskSpec.getName())
                 .collect(Collectors.toList());
-
-
-        List<TaskSpec> finishedTaskSpecs = tasks.stream()
-                .filter(taskSpec -> taskSpec.getGoal().equals(TaskSpec.GoalState.FINISHED))
-                .collect(Collectors.toList());
-
-        List<String> finishedTasksToLaunch = new ArrayList<>();
-        for (TaskSpec taskSpec : finishedTaskSpecs) {
-            String taskName = TaskSpec.getInstanceName(podInstance, taskSpec);
-            Optional<Protos.TaskStatus> taskStatusOptional = stateStore.fetchStatus(taskName);
-
-            if (!taskStatusOptional.isPresent()) {
-                LOGGER.warn("Failed to fetch status for: {}", taskName);
-                finishedTasksToLaunch.add(taskSpec.getName());
-            } else {
-                Protos.TaskStatus taskStatus = taskStatusOptional.get();
-                LOGGER.info("Task '{}' with FINISHED goal state has status: {}", taskName, taskStatus);
-                if (!taskStatus.getState().equals(Protos.TaskState.TASK_FINISHED)) {
-                    finishedTasksToLaunch.add(taskSpec.getName());
-                }
-            }
-        }
-
-        List<String> updatedTasksToLaunch = new ArrayList<>();
-        updatedTasksToLaunch.addAll(runningTasksToLaunch);
-        updatedTasksToLaunch.addAll(finishedTasksToLaunch);
-
-        return updatedTasksToLaunch;
     }
 
     public static String getStepName(PodInstance podInstance, Collection<String> tasksToLaunch) {

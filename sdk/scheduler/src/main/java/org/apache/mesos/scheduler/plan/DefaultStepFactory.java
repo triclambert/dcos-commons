@@ -43,7 +43,7 @@ public class DefaultStepFactory implements StepFactory {
         tasksToLaunch = TaskUtils.getTasksToLaunch(podInstance, stateStore, tasksToLaunch);
         validate(podInstance, tasksToLaunch);
 
-        List<Protos.TaskInfo> taskInfos = TaskUtils.getTaskNames(podInstance).stream()
+        List<Protos.TaskInfo> taskInfos = TaskUtils.getTaskNames(podInstance, tasksToLaunch).stream()
                 .map(taskName -> stateStore.fetchTask(taskName))
                 .filter(taskInfoOptional -> taskInfoOptional.isPresent())
                 .map(taskInfoOptional -> taskInfoOptional.get())

@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Utilities for implementations and users of {@link StateStore}.
@@ -180,8 +181,18 @@ public class StateStoreUtils {
             StateStore stateStore,
             PodInstance podInstance,
             TaskSpec taskSpec) {
+        String resourceSetName = taskSpec.getResourceSet().getId();
+        LOGGER.info("Looking for resource set: {}", resourceSetName);
 
-        Optional<TaskInfo> taskInfoOptional = stateStore.fetchTasks().stream()
+        Collection<String> tasksWithResourceSet = podInstance.getPod().getTasks().stream()
+                .filter(taskSpec1 -> resourceSetName.equals(taskSpec1.getResourceSet().getId()))
+                .map(taskSpec1 -> TaskSpec.getInstanceName(podInstance, taskSpec1))
+                .distinct()
+                .collect(Collectors.toList());
+
+        LOGGER.info("Tasks with resource set: {}, {}", resourceSetName, tasksWithResourceSet);
+
+        Collection<TaskInfo> taskInfosForPod = stateStore.fetchTasks().stream()
                 .filter(taskInfo -> {
                     try {
                         return TaskUtils.getType(taskInfo).equals(podInstance.getPod().getType());
@@ -196,11 +207,22 @@ public class StateStoreUtils {
                         return false;
                     }
                 })
+                .collect(Collectors.toList());
+
+        LOGGER.info("Tasks for pod: {}",
+                taskInfosForPod.stream()
+                        .map(taskInfo -> taskInfo.getName())
+                        .collect(Collectors.toList()));
+
+        Optional<TaskInfo> taskInfoOptional = taskInfosForPod.stream()
+                .filter(taskInfo -> tasksWithResourceSet.contains(taskInfo.getName()))
                 .findFirst();
 
         if (taskInfoOptional.isPresent()) {
+            LOGGER.info("Found Task with resource set: {}, {}", resourceSetName, taskInfoOptional.get());
             return taskInfoOptional.get().getResourcesList();
         } else {
+            LOGGER.error("Failed to find a Task with resource set: {}", resourceSetName);
             return Collections.emptyList();
         }
     }

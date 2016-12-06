@@ -16,7 +16,7 @@ pods:
             type: ROOT
             size: 5
         env:
-          SLEEP_DURATION: "100"
+          SLEEP_DURATION: "1000"
   name:
     count: 2
     resource-sets:
@@ -36,25 +36,25 @@ pods:
         cmd: "echo node >> name-data/output && sleep $SLEEP_DURATION"
         resource-set: name-resources
         env:
-          SLEEP_DURATION: "100"
+          SLEEP_DURATION: "1000"
       format:
         goal: FINISHED
         cmd: "echo format >> name-data/output"
         resource-set: name-resources
         env:
-          SLEEP_DURATION: "100"
+          SLEEP_DURATION: "1000"
       bootstrap:
         goal: FINISHED
         cmd: "echo bootstrap >> name-data/output"
         resource-set: name-resources
         env:
-          SLEEP_DURATION: "100"
+          SLEEP_DURATION: "1000"
       backup:
         goal: FINISHED
-        cmd: "echo >> name-data/output"
+        cmd: "echo backup >> name-data/output"
         resource-set: sidecar-resources
         env:
-          SLEEP_DURATION: "100"
+          SLEEP_DURATION: "1000"
   zkfc:
     count: 2
     tasks:
@@ -68,7 +68,7 @@ pods:
             type: ROOT
             size: 5
         env:
-          SLEEP_DURATION: "100"
+          SLEEP_DURATION: "1000"
   data:
     count: 2
     tasks:
@@ -82,15 +82,15 @@ pods:
             type: ROOT
             size: 5
         env:
-          SLEEP_DURATION: "100"
+          SLEEP_DURATION: "1000"
 
 plans:
   deploy:
     strategy: serial
     phases:
-      #jn-deploy:
-      #  strategy: parallel
-      #  pod: journal
+      jn-deploy:
+        strategy: parallel
+        pod: journal
       nn-deploy:
         strategy: serial
         pod: name
@@ -99,13 +99,13 @@ plans:
             tasks: [format]
           - podInstance: 0
             tasks: [node]
-          #- podInstance: 1
-          #  tasks: [bootstrap]
-          #- podInstance: 1
-          #  tasks: [node]
-      #zkfc-deploy:
-      #  strategy: parallel
-      #  pod: zkfc
-      #dn-deploy:
-      #  strategy: parallel
-      #  pod: data
+          - podInstance: 1
+            tasks: [bootstrap]
+          - podInstance: 1
+            tasks: [node]
+      zkfc-deploy:
+        strategy: parallel
+        pod: zkfc
+      dn-deploy:
+        strategy: parallel
+        pod: data
