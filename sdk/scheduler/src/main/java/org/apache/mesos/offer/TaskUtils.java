@@ -914,9 +914,8 @@ public class TaskUtils {
 
         return TaskSpec.GoalState.valueOf(goalStateString);
     }
-    public static List<String> getTasksToLaunch(
-            PodInstance podInstance,
-            StateStore stateStore) {
+
+    public static Collection<String> getTasksToLaunch(PodInstance podInstance, StateStore stateStore) {
         List<String> tasksToLaunch = podInstance.getPod().getTasks().stream()
                 .map(taskSpec -> taskSpec.getName())
                 .collect(Collectors.toList());
@@ -924,10 +923,10 @@ public class TaskUtils {
         return getTasksToLaunch(podInstance, stateStore,tasksToLaunch);
     }
 
-    public static List<String> getTasksToLaunch(
+    public static Collection<String> getTasksToLaunch(
             PodInstance podInstance,
             StateStore stateStore,
-            List<String> tasksToLaunch) {
+            Collection<String> tasksToLaunch) {
 
         List<TaskSpec> tasks = podInstance.getPod().getTasks().stream()
                 .filter(taskSpec -> tasksToLaunch.contains(taskSpec.getName()))
@@ -965,5 +964,9 @@ public class TaskUtils {
         updatedTasksToLaunch.addAll(finishedTasksToLaunch);
 
         return updatedTasksToLaunch;
+    }
+
+    public static String getStepName(PodInstance podInstance, Collection<String> tasksToLaunch) {
+        return podInstance.getName() + ":" + tasksToLaunch;
     }
 }

@@ -6,6 +6,7 @@ import org.apache.mesos.reconciliation.Reconciler;
 import org.apache.mesos.scheduler.DefaultObservable;
 import org.apache.mesos.scheduler.plan.strategy.SerialStrategy;
 import org.apache.mesos.scheduler.plan.strategy.Strategy;
+import org.apache.mesos.specification.PodInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +41,7 @@ public class ReconciliationStep extends DefaultObservable implements Step {
     }
 
     @Override
-    public Optional<OfferRequirement> getOfferRequirement() {
+    public Optional<PodInstanceRequirement> start() {
         try {
             reconciler.start();
             setStatus(Status.PREPARED);

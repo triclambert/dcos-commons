@@ -40,8 +40,8 @@ public class TimedLaunchConstrainer implements LaunchConstrainer {
     }
 
     @Override
-    public boolean canLaunch(RecoveryRequirement recoveryRequirement) {
-        if (RecoveryRequirementUtils.isPermanent(recoveryRequirement)) {
+    public boolean canLaunch(RecoveryRequirement.RecoveryType recoveryType) {
+        if (RecoveryRequirementUtils.isPermanent(recoveryType)) {
             Long timeLeft = lastPermanentRecoveryLaunchMs.get() + minDelay.toMillis() - getCurrentTimeMs();
             if (timeLeft < 0) {
                 return true;

@@ -38,7 +38,6 @@ public class DefaultRecoveryPlanManager extends ChainedObserver implements PlanM
     protected volatile Plan plan;
 
     protected final StateStore stateStore;
-    protected final RecoveryRequirementProvider recoveryReqProvider;
     protected final FailureMonitor failureMonitor;
     protected final LaunchConstrainer launchConstrainer;
     protected final Object planLock = new Object();
@@ -46,12 +45,10 @@ public class DefaultRecoveryPlanManager extends ChainedObserver implements PlanM
     public DefaultRecoveryPlanManager(
             StateStore stateStore,
             ConfigStore<ServiceSpec> configStore,
-            RecoveryRequirementProvider recoveryReqProvider,
             LaunchConstrainer launchConstrainer,
             FailureMonitor failureMonitor) {
         this.stateStore = stateStore;
         this.configStore = configStore;
-        this.recoveryReqProvider = recoveryReqProvider;
         this.failureMonitor = failureMonitor;
         this.launchConstrainer = launchConstrainer;
         plan = new DefaultPlan(RECOVERY_ELEMENT_NAME, Collections.emptyList());
@@ -82,7 +79,7 @@ public class DefaultRecoveryPlanManager extends ChainedObserver implements PlanM
             updatePlan(dirtyAssets);
             return PlanUtils.getCandidates(getPlan(), dirtyAssets).stream()
                     .filter(step ->
-                            launchConstrainer.canLaunch(((DefaultRecoveryStep) step).getRecoveryRequirement()))
+                            launchConstrainer.canLaunch(((DefaultRecoveryStep) step).getRecoveryType()))
                     .collect(Collectors.toList());
         }
     }
@@ -151,7 +148,7 @@ public class DefaultRecoveryPlanManager extends ChainedObserver implements PlanM
         Predicate<Protos.TaskInfo> isPodPermanentlyFailed = t -> (
                 FailureUtils.isLabeledAsFailed(t) || failureMonitor.hasFailed(t));
 
-        List<RecoveryRequirement> recoveryRequirements = new ArrayList<>();
+        List<Step> recoverySteps = new ArrayList<>();
         for (Map.Entry<PodInstance, List<Protos.TaskInfo>> failedPod : failedPodsMap.entrySet()) {
 
             PodInstance podInstance = failedPod.getKey();
@@ -177,10 +174,11 @@ public class DefaultRecoveryPlanManager extends ChainedObserver implements PlanM
                 continue;
             }
 
-            Integer expectedRunningCount = podInstance.getPod().getTasks().stream()
+            List<TaskSpec> expectedRunningTasks = podInstance.getPod().getTasks().stream()
                     .filter(taskSpec -> taskSpec.getGoal().equals(TaskSpec.GoalState.RUNNING))
-                    .collect(Collectors.toList())
-                    .size();
+                    .collect(Collectors.toList());
+
+            Integer expectedRunningCount = expectedRunningTasks.size();
 
             logger.info(
                     "Attempting to recover pod tasks: {}",
@@ -192,34 +190,32 @@ public class DefaultRecoveryPlanManager extends ChainedObserver implements PlanM
                 continue;
             }
 
-            try {
-                if (failedTasks.stream().allMatch(isPodPermanentlyFailed)) {
-                    logger.info("Recovering permanently failed pod: '{}'", podInstance.getName());
-                    recoveryRequirements.addAll(
-                            recoveryReqProvider.getPermanentRecoveryRequirements(failedTasks));
-                } else if (failedTasks.stream().noneMatch(isPodPermanentlyFailed)) {
-                    logger.info("Recovering transiently failed pod: '{}'", podInstance.getName());
-                    recoveryRequirements.addAll(
-                            recoveryReqProvider.getTransientRecoveryRequirements(failedTasks));
-                }
-            } catch (InvalidRequirementException e) {
-                logger.error("Failed to generate recovery requirement for pod: '{}'", podInstance.getName(), e);
-                continue;
+            Collection<String> tasksToLaunch = expectedRunningTasks.stream()
+                    .map(taskSpec -> taskSpec.getName())
+                    .collect(Collectors.toList());
+
+            if (failedTasks.stream().allMatch(isPodPermanentlyFailed)) {
+                logger.info("Recovering permanently failed pod: '{}'", podInstance.getName());
+                recoverySteps.add(new DefaultRecoveryStep(
+                        TaskUtils.getStepName(podInstance, tasksToLaunch),
+                        Status.PENDING,
+                        podInstance,
+                        tasksToLaunch,
+                        RecoveryRequirement.RecoveryType.PERMANENT,
+                        launchConstrainer));
+            } else if (failedTasks.stream().noneMatch(isPodPermanentlyFailed)) {
+                logger.info("Recovering transiently failed pod: '{}'", podInstance.getName());
+                recoverySteps.add(new DefaultRecoveryStep(
+                        TaskUtils.getStepName(podInstance, tasksToLaunch),
+                        Status.PENDING,
+                        podInstance,
+                        tasksToLaunch,
+                        RecoveryRequirement.RecoveryType.TRANSIENT,
+                        launchConstrainer));
             }
         }
 
-        return createSteps(recoveryRequirements);
-    }
-
-    private List<Step> createSteps(List<RecoveryRequirement> recoveryRequirements) {
-        return recoveryRequirements.stream()
-                .map(recoveryRequirement -> new DefaultRecoveryStep(
-                        recoveryRequirement.getPodInstance().getName(),
-                        Status.PENDING,
-                        recoveryRequirement.getPodInstance(),
-                        recoveryRequirement,
-                        launchConstrainer))
-                .collect(Collectors.toList());
+        return recoverySteps;
     }
 
     @Override

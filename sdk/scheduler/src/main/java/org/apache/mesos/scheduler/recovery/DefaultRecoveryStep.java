@@ -20,38 +20,39 @@ import java.util.Optional;
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings("EQ_DOESNT_OVERRIDE_EQUALS")
 public class DefaultRecoveryStep extends DefaultStep {
     private LaunchConstrainer launchConstrainer;
-    private RecoveryRequirement recoveryRequirement;
+    private RecoveryRequirement.RecoveryType recoveryType;
 
     public DefaultRecoveryStep(
             String name,
             Status status,
             PodInstance podInstance,
-            RecoveryRequirement recoveryRequirement,
+            Collection<String> tasksToLaunch,
+            RecoveryRequirement.RecoveryType recoveryType,
             LaunchConstrainer launchConstrainer) {
         super(
                 name,
-                Optional.of(recoveryRequirement.getOfferRequirement()),
                 status,
                 podInstance,
+                tasksToLaunch,
                 Collections.emptyList());
         this.launchConstrainer = launchConstrainer;
-        this.recoveryRequirement = recoveryRequirement;
+        this.recoveryType = recoveryType;
     }
 
     @Override
     public void updateOfferStatus(Collection<Protos.Offer.Operation> operations) {
         super.updateOfferStatus(operations);
         if (CollectionUtils.isNotEmpty(operations)) {
-            launchConstrainer.launchHappened(operations.iterator().next(), recoveryRequirement.getRecoveryType());
+            launchConstrainer.launchHappened(operations.iterator().next(), recoveryType);
         }
     }
 
-    public RecoveryRequirement getRecoveryRequirement() {
-        return recoveryRequirement;
+    public RecoveryRequirement.RecoveryType getRecoveryType() {
+        return recoveryType;
     }
 
     @Override
     public String getMessage() {
-        return super.getMessage() + " RecoveryType: " + recoveryRequirement.getRecoveryType().name();
+        return super.getMessage() + " RecoveryType: " + recoveryType.name();
     }
 }

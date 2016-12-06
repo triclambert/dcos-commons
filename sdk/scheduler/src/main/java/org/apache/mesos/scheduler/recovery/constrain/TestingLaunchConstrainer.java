@@ -25,7 +25,7 @@ public class TestingLaunchConstrainer implements LaunchConstrainer {
     }
 
     @Override
-    public boolean canLaunch(RecoveryRequirement recoveryRequirement) {
+    public boolean canLaunch(RecoveryRequirement.RecoveryType recoveryType) {
         return this.canLaunch;
     }
 }

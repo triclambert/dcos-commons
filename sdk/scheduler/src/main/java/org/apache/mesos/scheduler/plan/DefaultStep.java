@@ -23,25 +23,23 @@ import java.util.*;
 public class DefaultStep extends DefaultObservable implements Step {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final String name;
-    private final Optional<OfferRequirement> offerRequirementOptional;
     private final UUID id = UUID.randomUUID();
     private final List<String> errors;
     private final Strategy strategy = new ParallelStrategy();
     private final Object statusLock = new Object();
-    private final PodInstance podInstance;
+    private final PodInstanceRequirement podInstanceRequirement;
     private Status status;
-    private Map<Protos.TaskID, Status> tasks = new HashMap<>();
+    private Map<String, Status> tasks = new HashMap<>();
 
     public DefaultStep(
             String name,
-            Optional<OfferRequirement> offerRequirementOptional,
             Status status,
             PodInstance podInstance,
+            Collection<String> tasksToLaunch,
             List<String> errors) {
         this.name = name;
-        this.offerRequirementOptional = offerRequirementOptional;
         this.status = status;
-        this.podInstance = podInstance;
+        this.podInstanceRequirement = new PodInstanceRequirement(podInstance, tasksToLaunch);
         this.errors = errors;
 
         setStatus(status); // Log initial status
@@ -51,8 +49,8 @@ public class DefaultStep extends DefaultObservable implements Step {
      * This method may be triggered by external components via the {@link #updateOfferStatus(Collection)} method in
      * particular, so it is synchronized to avoid inconsistent expectations regarding what TaskIDs are relevant to it.
      *
-     * @param operations The Operations which were performed in response to the OfferRequirement provided by
-     * {@link #getOfferRequirement()}
+     * @param operations The Operations which were performed in response to the {@link PodInstanceRequirement} provided
+     *                   by {@link #start()}
      */
     private synchronized void setTaskIds(Collection <Protos.Offer.Operation> operations) {
         tasks.clear();
@@ -60,7 +58,9 @@ public class DefaultStep extends DefaultObservable implements Step {
         for (Protos.Offer.Operation operation : operations) {
             if (operation.getType().equals(Protos.Offer.Operation.Type.LAUNCH)) {
                 for (Protos.TaskInfo taskInfo : operation.getLaunch().getTaskInfosList()) {
-                    tasks.put(taskInfo.getTaskId(), Status.PREPARED);
+                    if (!taskInfo.getTaskId().getValue().equals("")) {
+                        tasks.put(taskInfo.getTaskId().getValue(), Status.PREPARED);
+                    }
                 }
             }
         }
@@ -83,8 +83,8 @@ public class DefaultStep extends DefaultObservable implements Step {
     }
 
     @Override
-    public Optional<OfferRequirement> getOfferRequirement() {
-        return offerRequirementOptional;
+    public Optional<PodInstanceRequirement> start() {
+        return Optional.of(podInstanceRequirement);
     }
 
     @Override
@@ -162,7 +162,9 @@ public class DefaultStep extends DefaultObservable implements Step {
 
     @Override
     public synchronized void update(Protos.TaskStatus status) {
-        if (!tasks.containsKey(status.getTaskId())) {
+        logger.info("{} received status: {}", getName(), status);
+
+        if (!tasks.containsKey(status.getTaskId().getValue())) {
             logger.debug(getName() + " ignoring irrelevant TaskStatus: " + status);
             return;
         }
@@ -172,44 +174,45 @@ public class DefaultStep extends DefaultObservable implements Step {
             return;
         }
 
+        TaskSpec.GoalState goalState = null;
+        try {
+            goalState = TaskUtils.getGoalState(
+                    podInstanceRequirement.getPodInstance(),
+                    TaskUtils.toTaskName(status.getTaskId()));
+        } catch (TaskException e) {
+            logger.error("Failed to update status.", e);
+            setStatus(getStatus()); // Log status
+            return;
+        }
+
+        logger.info("Goal state for: {} is: {}", status.getTaskId().getValue(), goalState.name());
+
         switch (status.getState()) {
             case TASK_ERROR:
             case TASK_FAILED:
             case TASK_KILLED:
             case TASK_KILLING:
-                tasks.replace(status.getTaskId(), Status.PENDING);
+                setTaskStatus(status.getTaskId(), Status.PENDING);
                 // Retry the step because something failed.
                 setStatus(Status.PENDING);
                 break;
             case TASK_STAGING:
             case TASK_STARTING:
-                tasks.replace(status.getTaskId(), Status.STARTING);
+                setTaskStatus(status.getTaskId(), Status.STARTING);
                 break;
             case TASK_RUNNING:
-                try {
-                    if (TaskUtils.getGoalState(
-                            podInstance,
-                            TaskUtils.toTaskName(status.getTaskId())).equals(TaskSpec.GoalState.RUNNING)) {
-                        tasks.replace(status.getTaskId(), Status.COMPLETE);
+                    if (goalState.equals(TaskSpec.GoalState.RUNNING)) {
+                        setTaskStatus(status.getTaskId(), Status.COMPLETE);
                     } else {
-                        tasks.replace(status.getTaskId(), Status.STARTING);
+                        setTaskStatus(status.getTaskId(), Status.STARTING);
                     }
-                } catch (TaskException e) {
-                    logger.error("Failed to update status.", e);
-                }
                 break;
             case TASK_FINISHED:
-                try {
-                    if (TaskUtils.getGoalState(
-                            podInstance,
-                            TaskUtils.toTaskName(status.getTaskId())).equals(TaskSpec.GoalState.FINISHED)) {
-                        tasks.replace(status.getTaskId(), Status.COMPLETE);
+                    if (goalState.equals(TaskSpec.GoalState.FINISHED)) {
+                        setTaskStatus(status.getTaskId(), Status.COMPLETE);
                     } else {
-                        tasks.replace(status.getTaskId(), Status.PENDING);
+                        setTaskStatus(status.getTaskId(), Status.PENDING);
                     }
-                } catch (TaskException e) {
-                    logger.error("Failed to update status.", e);
-                }
                 break;
             default:
                 logger.warn("Failed to process unexpected state: " + status.getState());
@@ -218,15 +221,23 @@ public class DefaultStep extends DefaultObservable implements Step {
         setStatus(getStatus(tasks));
     }
 
-    private Status getStatus(Map<Protos.TaskID, Status> tasks) {
+    private void setTaskStatus(Protos.TaskID taskID, Status status) {
+        tasks.replace(taskID.getValue(), status);
+        logger.info("Status for: {} is: {}", taskID.getValue(), status);
+    }
+
+    private Status getStatus(Map<String, Status> tasks) {
         if (tasks.isEmpty()) {
             return Status.PENDING;
         }
 
-        for (Status taskStatus : tasks.values()) {
-            if (!taskStatus.equals(Status.COMPLETE)) {
+        for (Map.Entry<String, Status> entry : tasks.entrySet()) {
+            String taskId = entry.getKey();
+            Status status = entry.getValue();
+            logger.info("TaskId: {} has status: {}", taskId, status);
+            if (!status.equals(Status.COMPLETE)) {
                 // Keep and log current status
-                return taskStatus;
+                return status;
             }
         }
 
@@ -249,7 +260,7 @@ public class DefaultStep extends DefaultObservable implements Step {
     }
 
     @VisibleForTesting
-    public Map<Protos.TaskID, Status> getExpectedTasks() {
+    public Map<String, Status> getExpectedTasks() {
         return tasks;
     }
 }

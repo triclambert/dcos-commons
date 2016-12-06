@@ -22,10 +22,11 @@ public interface LaunchConstrainer {
     void launchHappened(Operation launchOperation, RecoveryRequirement.RecoveryType recoveryType);
 
     /**
-     * Determines whether the given {@link RecoveryRequirement} can be launchHappened right now.
+     * Determines whether the given {@link org.apache.mesos.scheduler.recovery.RecoveryRequirement.RecoveryType}
+     * can be launchHappened right now.
      *
-     * @param recoveryRequirement The {@link RecoveryRequirement} to be examined.
+     * @param recoveryType The {@link RecoveryRequirement.RecoveryType} to be examined.
      * @return True if the offer is safe to launch immediately, false if it should wait
      */
-    boolean canLaunch(RecoveryRequirement recoveryRequirement);
+    boolean canLaunch(RecoveryRequirement.RecoveryType recoveryType);
 }

@@ -1,6 +1,7 @@
 package org.apache.mesos.offer;
 
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
+import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.Offer.Operation;
 import org.apache.mesos.Protos.TaskInfo;
@@ -15,6 +16,14 @@ public class LaunchOfferRecommendation implements OfferRecommendation {
 
     public LaunchOfferRecommendation(Offer offer, TaskInfo taskInfo) {
         this.offer = offer;
+        this.mesosTask = new MesosTask(taskInfo);
+
+        if (isTransient()) {
+            taskInfo = taskInfo.toBuilder()
+                    .setTaskId(Protos.TaskID.newBuilder().setValue(""))
+                    .build();
+        }
+
         this.operation = Operation.newBuilder()
                 .setType(Operation.Type.LAUNCH)
                 .setLaunch(Operation.Launch.newBuilder()
@@ -22,7 +31,6 @@ public class LaunchOfferRecommendation implements OfferRecommendation {
                                 .setSlaveId(offer.getSlaveId())
                                 .build()))
                 .build();
-        this.mesosTask = new MesosTask(taskInfo);
     }
 
     @Override

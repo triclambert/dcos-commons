@@ -42,13 +42,13 @@ public class ReconciliationStepTest {
     @Test
     public void testStartStatusProviderFailure() throws Exception {
         doThrow(new RuntimeException("hello")).when(mockReconciler).start();
-        assertFalse(step.getOfferRequirement().isPresent());
+        assertFalse(step.start().isPresent());
         assertTrue(step.isPending());
     }
 
     @Test
     public void testStart() throws Exception {
-        assertFalse(step.getOfferRequirement().isPresent());
+        assertFalse(step.start().isPresent());
         assertFalse(step.isPending());
 
         when(mockReconciler.isReconciled()).thenReturn(false);
@@ -61,7 +61,7 @@ public class ReconciliationStepTest {
 
     @Test
     public void testStartInProgressRestart() throws Exception {
-        assertFalse(step.getOfferRequirement().isPresent());
+        assertFalse(step.start().isPresent());
 
         when(mockReconciler.isReconciled()).thenReturn(false);
         assertTrue(step.isPrepared());
@@ -71,7 +71,7 @@ public class ReconciliationStepTest {
 
     @Test
     public void testStartCompleteRestart() throws Exception {
-        assertFalse(step.getOfferRequirement().isPresent());
+        assertFalse(step.start().isPresent());
         assertFalse(step.isPending());
 
         when(mockReconciler.isReconciled()).thenReturn(true);
@@ -92,7 +92,7 @@ public class ReconciliationStepTest {
 
     @Test
     public void testForceCompleteFromInProgress() throws Exception {
-        assertFalse(step.getOfferRequirement().isPresent());
+        assertFalse(step.start().isPresent());
         when(mockReconciler.isReconciled()).thenReturn(false);
         assertTrue(step.isPrepared());
 
@@ -103,7 +103,7 @@ public class ReconciliationStepTest {
 
     @Test
     public void testForceCompleteFromComplete() throws Exception {
-        assertFalse(step.getOfferRequirement().isPresent());
+        assertFalse(step.start().isPresent());
         when(mockReconciler.isReconciled()).thenReturn(true);
         assertTrue(step.isComplete());
 

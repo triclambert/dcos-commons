@@ -45,9 +45,9 @@ public class DefaultStepTest {
     public void testCompleteTerminal() {
         DefaultStep step = new DefaultStep(
                 TEST_STEP_NAME,
-                Optional.of(mockOfferRequirement),
                 Status.PENDING,
                 podInstance,
+                TaskUtils.getTaskNames(podInstance),
                 Collections.emptyList());
 
         Assert.assertTrue(step.isPending());

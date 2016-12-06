@@ -36,7 +36,7 @@ public class TestStep extends DefaultObservable implements Step {
     }
 
     @Override
-    public Optional<OfferRequirement> getOfferRequirement() {
+    public Optional<PodInstanceRequirement> start() {
         setStatus(Status.PREPARED);
         return Optional.empty();
     }

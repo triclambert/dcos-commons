@@ -8,6 +8,7 @@ import org.apache.mesos.config.ConfigStore;
 import org.apache.mesos.offer.MesosResource;
 import org.apache.mesos.offer.TaskException;
 import org.apache.mesos.offer.TaskUtils;
+import org.apache.mesos.specification.PodInstance;
 import org.apache.mesos.specification.ServiceSpec;
 import org.apache.mesos.specification.TaskSpec;
 import org.slf4j.Logger;
@@ -77,7 +78,7 @@ public class StateStoreUtils {
             }
 
             if (TaskUtils.needsRecovery(taskSpec.get(), status)) {
-                LOGGER.info("Task: {} needs recovery.", taskSpec.get());
+                LOGGER.info("Task: {} with status: {} needs recovery.", taskSpec.get(), status);
                 results.add(info);
             }
         }
@@ -173,5 +174,34 @@ public class StateStoreUtils {
         }
 
         return reservedResources;
+    }
+
+    public static Collection<Protos.Resource> getResources(
+            StateStore stateStore,
+            PodInstance podInstance,
+            TaskSpec taskSpec) {
+
+        Optional<TaskInfo> taskInfoOptional = stateStore.fetchTasks().stream()
+                .filter(taskInfo -> {
+                    try {
+                        return TaskUtils.getType(taskInfo).equals(podInstance.getPod().getType());
+                    } catch (TaskException e) {
+                        return false;
+                    }
+                })
+                .filter(taskInfo -> {
+                    try {
+                        return TaskUtils.getIndex(taskInfo).equals(podInstance.getIndex());
+                    } catch (TaskException e) {
+                        return false;
+                    }
+                })
+                .findFirst();
+
+        if (taskInfoOptional.isPresent()) {
+            return taskInfoOptional.get().getResourcesList();
+        } else {
+            return Collections.emptyList();
+        }
     }
 }

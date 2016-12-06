@@ -36,7 +36,7 @@ public class DefaultStepFactory implements StepFactory {
     }
 
     @Override
-    public Step getStep(PodInstance podInstance, List<String> tasksToLaunch)
+    public Step getStep(PodInstance podInstance, Collection<String> tasksToLaunch)
             throws Step.InvalidStepException, InvalidRequirementException {
 
         LOGGER.info("Generating step for pod: {}, with tasks: {}", podInstance.getName(), tasksToLaunch);
@@ -49,45 +49,23 @@ public class DefaultStepFactory implements StepFactory {
                 .map(taskInfoOptional -> taskInfoOptional.get())
                 .collect(Collectors.toList());
 
-        String stepName = podInstance.getName() + ":" + tasksToLaunch;
         try {
-            if (taskInfos.isEmpty()) {
-                LOGGER.info("Generating new step: {}", stepName);
-                return new DefaultStep(
-                        stepName,
-                        Optional.of(offerRequirementProvider.getNewOfferRequirement(podInstance, tasksToLaunch)),
-                        Status.PENDING,
-                        podInstance,
-                        Collections.emptyList());
-            } else {
-                // Note: This path is for deploying new versions of tasks, unlike transient recovery
-                // which is only interested in relaunching tasks as they were. So while they omit
-                // placement rules in their OfferRequirement, we include them.
-                List<String> taskInfoNames = taskInfos.stream()
-                        .map(taskInfo -> taskInfo.getName())
-                        .collect(Collectors.toList());
-                List<String> fullTaskNamesToLaunch = TaskUtils.getTaskNames(podInstance, tasksToLaunch);
-                LOGGER.info("taskInfo names: {}", taskInfoNames);
-                LOGGER.info("fullTaskNamesToLaunch: {}", fullTaskNamesToLaunch);
-                taskInfos = taskInfos.stream()
-                        .filter(taskInfo -> fullTaskNamesToLaunch.contains(taskInfo.getName()))
-                        .collect(Collectors.toList());
-                Status status = getStatus(podInstance, taskInfos);
-                LOGGER.info("Generating existing step: {} with status: {}", stepName, status);
-                return new DefaultStep(
-                        stepName,
-                        Optional.of(offerRequirementProvider.getExistingOfferRequirement(podInstance, tasksToLaunch)),
-                        status,
-                        podInstance,
-                        Collections.emptyList());
-            }
-        } catch (ConfigStoreException | TaskException | InvalidRequirementException e) {
+            Status status = taskInfos.isEmpty() ? Status.PENDING : getStatus(podInstance, taskInfos);
+            String stepName = TaskUtils.getStepName(podInstance, tasksToLaunch);
+
+            return new DefaultStep(
+                    stepName,
+                    status,
+                    podInstance,
+                    tasksToLaunch,
+                    Collections.emptyList());
+        } catch (ConfigStoreException | TaskException e) {
             LOGGER.error("Failed to generate Step with exception: ", e);
             throw new Step.InvalidStepException(e);
         }
     }
 
-    private void validate(PodInstance podInstance, List<String> tasksToLaunch) throws Step.InvalidStepException {
+    private void validate(PodInstance podInstance, Collection<String> tasksToLaunch) throws Step.InvalidStepException {
         List<TaskSpec> taskSpecsToLaunch = podInstance.getPod().getTasks().stream()
                 .filter(taskSpec -> tasksToLaunch.contains(taskSpec.getName()))
                 .collect(Collectors.toList());

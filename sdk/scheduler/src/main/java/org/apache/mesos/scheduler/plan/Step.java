@@ -3,6 +3,7 @@ package org.apache.mesos.scheduler.plan;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.scheduler.Observable;
+import org.apache.mesos.specification.PodInstance;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -27,7 +28,7 @@ public interface Step extends Element {
      * @see {@link #updateOfferStatus(Collection<Offer.Operation>)} which returns the outcome of the
      *      {@link OfferRequirement}
      */
-    Optional<OfferRequirement> getOfferRequirement();
+    Optional<PodInstanceRequirement> start();
 
     /**
      * Notifies the Step whether the {@link OfferRequirement} previously returned by

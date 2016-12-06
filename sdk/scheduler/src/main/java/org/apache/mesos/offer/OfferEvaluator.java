@@ -11,6 +11,8 @@ import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.Value;
 import org.apache.mesos.executor.ExecutorUtils;
 import org.apache.mesos.offer.constrain.PlacementRule;
+import org.apache.mesos.scheduler.plan.PodInstanceRequirement;
+import org.apache.mesos.specification.PodInstance;
 import org.apache.mesos.state.StateStore;
 import org.apache.mesos.state.StateStoreException;
 import org.slf4j.Logger;
@@ -34,15 +36,21 @@ public class OfferEvaluator {
     private static final Logger logger = LoggerFactory.getLogger(OfferEvaluator.class);
 
     private final StateStore stateStore;
+    private final OfferRequirementProvider offerRequirementProvider;
 
     @Inject
-    public OfferEvaluator(StateStore stateStore) {
+    public OfferEvaluator(StateStore stateStore, OfferRequirementProvider offerRequirementProvider) {
         this.stateStore = stateStore;
+        this.offerRequirementProvider = offerRequirementProvider;
     }
 
-    public List<OfferRecommendation> evaluate(OfferRequirement offerRequirement, List<Offer> offers)
-            throws StateStoreException {
+    public List<OfferRecommendation> evaluate(PodInstanceRequirement podInstanceRequirement, List<Offer> offers)
+            throws StateStoreException, InvalidRequirementException {
 
+        return evaluate(getOfferRequirement(podInstanceRequirement), offers);
+    }
+
+    public List<OfferRecommendation> evaluate(OfferRequirement offerRequirement, List<Offer> offers) {
         // First, check placement constraints (to filter offers)
         List<Offer> filteredOffers = new ArrayList<>();
         Optional<PlacementRule> placementRuleOptional = offerRequirement.getPlacementRuleOptional();
@@ -71,7 +79,36 @@ public class OfferEvaluator {
                         index + 1, TextFormat.shortDebugString(offer));
             }
         }
+
         return Collections.emptyList();
+    }
+
+    private OfferRequirement getOfferRequirement(PodInstanceRequirement podInstanceRequirement)
+            throws InvalidRequirementException {
+
+        PodInstance podInstance = podInstanceRequirement.getPodInstance();
+        Collection<String> tasksToLaunch = podInstanceRequirement.getTasksToLaunch();
+        logger.info("Generating step for pod: {}, with tasks: {}", podInstance.getName(), tasksToLaunch);
+
+        tasksToLaunch = TaskUtils.getTasksToLaunch(podInstance, stateStore, tasksToLaunch);
+
+        List<Protos.TaskInfo> taskInfos = TaskUtils.getTaskNames(podInstance).stream()
+                .map(taskName -> stateStore.fetchTask(taskName))
+                .filter(taskInfoOptional -> taskInfoOptional.isPresent())
+                .map(taskInfoOptional -> taskInfoOptional.get())
+                .collect(Collectors.toList());
+
+        String stepName = podInstance.getName() + ":" + tasksToLaunch;
+        try {
+            if (taskInfos.isEmpty()) {
+                logger.info("Generating new step: {}", stepName);
+                return offerRequirementProvider.getNewOfferRequirement(podInstance, tasksToLaunch);
+            } else {
+                return offerRequirementProvider.getExistingOfferRequirement(podInstance, tasksToLaunch);
+            }
+        } catch (InvalidRequirementException e) {
+            throw new InvalidRequirementException(e);
+        }
     }
 
     private List<Offer> evaluatePlacementRule(

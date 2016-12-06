@@ -15,7 +15,7 @@ public class UnconstrainedLaunchConstrainer implements LaunchConstrainer {
     }
 
     @Override
-    public boolean canLaunch(RecoveryRequirement recoveryRequirement) {
+    public boolean canLaunch(RecoveryRequirement.RecoveryType recoveryType) {
         return true;
     }
 }

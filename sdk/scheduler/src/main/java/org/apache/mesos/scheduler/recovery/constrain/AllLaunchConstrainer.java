@@ -31,9 +31,9 @@ public class AllLaunchConstrainer implements LaunchConstrainer {
     }
 
     @Override
-    public boolean canLaunch(RecoveryRequirement recoveryRequirement) {
+    public boolean canLaunch(RecoveryRequirement.RecoveryType recoveryType) {
         for (LaunchConstrainer constrainer : constrainers) {
-            if (!constrainer.canLaunch(recoveryRequirement)) {
+            if (!constrainer.canLaunch(recoveryType)) {
                 return false;
             }
         }

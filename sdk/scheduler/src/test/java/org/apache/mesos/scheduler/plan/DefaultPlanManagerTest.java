@@ -108,7 +108,7 @@ public class DefaultPlanManagerTest {
                 Collections.emptyList());
 
         Step reconciliationStep = (Step) reconciliationPhase.getChildren().get(0);
-        reconciliationStep.getOfferRequirement();
+        reconciliationStep.start();
         Assert.assertTrue(reconciliationStep.isPrepared());
 
         PlanManager manager = new DefaultPlanManager(inProgressPlan);

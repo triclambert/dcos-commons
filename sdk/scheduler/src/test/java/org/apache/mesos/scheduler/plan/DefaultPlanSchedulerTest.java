@@ -77,6 +77,7 @@ public class DefaultPlanSchedulerTest {
         assertTrue(step.isPrepared());
     }
 
+    /*
     @Test
     public void testEvaluateNoRecommendations() throws InvalidRequirementException {
         OfferRequirement requirement = OfferRequirement.create(TestConstants.TASK_TYPE, 0, TASKINFOS);
@@ -118,22 +119,22 @@ public class DefaultPlanSchedulerTest {
     }
 
     private static class TestOfferStep extends TestStep {
-        private final OfferRequirement requirement;
+        private final PodInstanceRequirement podInstanceRequirement;
         private Collection<Operation> operations;
 
-        private TestOfferStep(OfferRequirement requirementToReturn) {
+        private TestOfferStep(PodInstanceRequirement podInstanceRequirement) {
             super();
-            this.requirement = requirementToReturn;
+            this.podInstanceRequirement = podInstanceRequirement;
             this.operations = Collections.emptyList();
         }
 
         @Override
-        public Optional<OfferRequirement> getOfferRequirement() {
-            super.getOfferRequirement();
-            if (requirement == null) {
+        public Optional<PodInstanceRequirement> start() {
+            super.start();
+            if (podInstanceRequirement == null) {
                 return Optional.empty();
             } else {
-                return Optional.of(requirement);
+                return Optional.of(podInstanceRequirement);
             }
         }
 
@@ -143,4 +144,5 @@ public class DefaultPlanSchedulerTest {
             this.operations = operations;
         }
     }
+    */
 }

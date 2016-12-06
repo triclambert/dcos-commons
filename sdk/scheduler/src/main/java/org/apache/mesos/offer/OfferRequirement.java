@@ -53,6 +53,17 @@ public class OfferRequirement {
                 placementRuleOptional);
     }
 
+    public static OfferRequirement create(
+            String taskType,
+            Integer index,
+            Collection<TaskRequirement> taskRequirements,
+            ExecutorRequirement executorRequirement,
+            Optional<PlacementRule> placementRuleOptional) {
+
+        return new OfferRequirement(taskType, index, taskRequirements, Optional.of(executorRequirement),
+                placementRuleOptional);
+    }
+
     /**
      * Creates a new {@link OfferRequirement} with provided executor requirement and empty placement
      * constraints.
@@ -85,18 +96,6 @@ public class OfferRequirement {
     public OfferRequirement withoutPlacementRules() {
         return new OfferRequirement(type, index, taskRequirements, executorRequirementOptional, Optional.empty());
     }
-
-    public static OfferRequirement create(
-            String taskType,
-            Integer index,
-            Collection<TaskRequirement> taskRequirements,
-            ExecutorRequirement executorRequirement,
-            Optional<PlacementRule> placementRuleOptional) {
-
-        return new OfferRequirement(taskType, index, taskRequirements, Optional.of(executorRequirement),
-                placementRuleOptional);
-    }
-
 
     private OfferRequirement(
             String type,

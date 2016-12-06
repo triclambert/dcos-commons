@@ -6,6 +6,7 @@ import org.apache.mesos.Protos.OfferID;
 import org.apache.mesos.SchedulerDriver;
 import org.apache.mesos.offer.*;
 import org.apache.mesos.scheduler.TaskKiller;
+import org.apache.mesos.specification.PodInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,28 +82,34 @@ public class DefaultPlanScheduler implements PlanScheduler {
         }
 
         logger.info("Processing resource offers for step: {}", step.getName());
-        Optional<OfferRequirement> offerRequirementOptional = step.getOfferRequirement();
-        if (!offerRequirementOptional.isPresent()) {
-            logger.info("No OfferRequirement for step: {}", step.getName());
+        Optional<PodInstanceRequirement> podInstanceRequirementOptional = step.start();
+        if (!podInstanceRequirementOptional.isPresent()) {
+            logger.info("No PodInstanceRequirement for step: {}", step.getName());
             step.updateOfferStatus(Collections.emptyList());
             return acceptedOffers;
         }
 
-        OfferRequirement offerRequirement = offerRequirementOptional.get();
+        PodInstanceRequirement podInstanceRequirement = podInstanceRequirementOptional.get();
         // It is harmless to attempt to kill tasks which have never been launched.  This call attempts to Kill all Tasks
         // with a Task name which is equivalent to that expressed by the OfferRequirement.  If no such Task is currently
         // running no operation occurs.
-        killTasks(offerRequirement);
+        killTasks(podInstanceRequirement.getPodInstance());
 
         // Step has returned an OfferRequirement to process. Find offers which match the
         // requirement and accept them, if any are found:
-        List<OfferRecommendation> recommendations = offerEvaluator.evaluate(offerRequirement, offers);
+        List<OfferRecommendation> recommendations = null;
+        try {
+            recommendations = offerEvaluator.evaluate(podInstanceRequirement, offers);
+        } catch (InvalidRequirementException e) {
+            logger.error("Failed generate OfferRequirement.", e);
+            return acceptedOffers;
+        }
 
         if (recommendations.isEmpty()) {
             // Log that we're not finding suitable offers, possibly due to insufficient resources.
             logger.warn(
                     "Unable to find any offers which fulfill requirement provided by step {}: {}",
-                    step.getName(), offerRequirement);
+                    step.getName(), podInstanceRequirement);
             step.updateOfferStatus(Collections.emptyList());
             return acceptedOffers;
         }
@@ -120,9 +127,8 @@ public class DefaultPlanScheduler implements PlanScheduler {
         return acceptedOffers;
     }
 
-    private void killTasks(OfferRequirement offerRequirement) {
-        for (TaskRequirement taskRequirement : offerRequirement.getTaskRequirements()) {
-            String taskName = taskRequirement.getTaskInfo().getName();
+    private void killTasks(PodInstance podInstance) {
+        for (String taskName : TaskUtils.getTaskNames(podInstance)) {
             taskKiller.killTask(taskName, false);
         }
     }

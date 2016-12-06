@@ -91,6 +91,7 @@ public class DefaultPlanCoordinatorTest {
     private StepFactory stepFactory;
     private PhaseFactory phaseFactory;
     private EnvironmentVariables environmentVariables;
+    private DefaultOfferRequirementProvider provider;
 
     @BeforeClass
     public static void beforeAll() throws Exception {
@@ -123,7 +124,9 @@ public class DefaultPlanCoordinatorTest {
                 new DefaultOfferRequirementProvider(new DefaultTaskConfigRouter(new HashMap<>()), stateStore, UUID.randomUUID()));
         phaseFactory = new DefaultPhaseFactory(stepFactory);
         taskKiller = new DefaultTaskKiller(stateStore, taskFailureListener, schedulerDriver);
-        planScheduler = new DefaultPlanScheduler(offerAccepter, new OfferEvaluator(stateStore), taskKiller);
+
+        provider = new DefaultOfferRequirementProvider(new DefaultTaskConfigRouter(), stateStore, UUID.randomUUID());
+        planScheduler = new DefaultPlanScheduler(offerAccepter, new OfferEvaluator(stateStore, provider), taskKiller);
         serviceSpecificationB = DefaultServiceSpec.newBuilder()
                 .name(SERVICE_NAME + "-B")
                 .role(TestConstants.ROLE)
