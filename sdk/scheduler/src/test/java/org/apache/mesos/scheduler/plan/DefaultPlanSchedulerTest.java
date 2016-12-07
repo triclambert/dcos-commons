@@ -5,15 +5,24 @@ import org.apache.mesos.Protos.Offer.Operation;
 import org.apache.mesos.SchedulerDriver;
 import org.apache.mesos.offer.*;
 import org.apache.mesos.scheduler.TaskKiller;
+import org.apache.mesos.specification.DefaultServiceSpec;
+import org.apache.mesos.specification.PodInstance;
+import org.apache.mesos.specification.PodSpec;
+import org.apache.mesos.specification.yaml.YAMLServiceSpecFactory;
 import org.apache.mesos.testutils.TestConstants;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.io.File;
 import java.util.*;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
 /**
@@ -40,17 +49,32 @@ public class DefaultPlanSchedulerTest {
     private static final List<OfferID> ACCEPTED_IDS =
             Arrays.asList(OfferID.newBuilder().setValue("offer").build());
 
+    @Rule
+    public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
+
     @Mock private OfferAccepter mockOfferAccepter;
     @Mock private OfferEvaluator mockOfferEvaluator;
     @Mock private SchedulerDriver mockSchedulerDriver;
     @Mock private TaskKiller mockTaskKiller;
+    private PodInstanceRequirement podInstanceRequirement;
 
     private DefaultPlanScheduler scheduler;
 
     @Before
-    public void beforeEach() {
+    public void beforeEach() throws Exception {
         MockitoAnnotations.initMocks(this);
+        environmentVariables.set("PORT0", "8080");
         scheduler = new DefaultPlanScheduler(mockOfferAccepter, mockOfferEvaluator, mockTaskKiller);
+
+        ClassLoader classLoader = getClass().getClassLoader();
+        File file = new File(classLoader.getResource("valid-minimal.yml").getFile());
+        DefaultServiceSpec serviceSpec = YAMLServiceSpecFactory
+                .generateServiceSpec(YAMLServiceSpecFactory.generateRawSpecFromYAML(file));
+
+        PodSpec podSpec = serviceSpec.getPods().get(0);
+        PodInstance podInstance = new DefaultPodInstance(podSpec, 0);
+        List<String> tasksToLaunch = TaskUtils.getTaskNames(podInstance);
+        podInstanceRequirement = new PodInstanceRequirement(podInstance, tasksToLaunch);
     }
 
     @Test
@@ -77,26 +101,23 @@ public class DefaultPlanSchedulerTest {
         assertTrue(step.isPrepared());
     }
 
-    /*
     @Test
     public void testEvaluateNoRecommendations() throws InvalidRequirementException {
-        OfferRequirement requirement = OfferRequirement.create(TestConstants.TASK_TYPE, 0, TASKINFOS);
-        TestOfferStep step = new TestOfferStep(requirement);
+        TestOfferStep step = new TestOfferStep(podInstanceRequirement);
         step.setStatus(Status.PENDING);
-        when(mockOfferEvaluator.evaluate(requirement, OFFERS)).thenReturn(new ArrayList<>());
+        when(mockOfferEvaluator.evaluate(podInstanceRequirement, OFFERS)).thenReturn(new ArrayList<>());
 
         assertTrue(scheduler.resourceOffers(mockSchedulerDriver, OFFERS, Arrays.asList(step)).isEmpty());
         assertTrue(step.operations.isEmpty());
-        verify(mockOfferEvaluator).evaluate(requirement, OFFERS);
+        verify(mockOfferEvaluator).evaluate(podInstanceRequirement, OFFERS);
         assertTrue(step.isPrepared());
     }
 
     @Test
     public void testEvaluateNoAcceptedOffers() throws InvalidRequirementException {
-        OfferRequirement requirement = OfferRequirement.create(TestConstants.TASK_TYPE, 0, TASKINFOS);
-        TestOfferStep step = new TestOfferStep(requirement);
+        TestOfferStep step = new TestOfferStep(podInstanceRequirement);
         step.setStatus(Status.PENDING);
-        when(mockOfferEvaluator.evaluate(requirement, OFFERS)).thenReturn(RECOMMENDATIONS);
+        when(mockOfferEvaluator.evaluate(podInstanceRequirement, OFFERS)).thenReturn(RECOMMENDATIONS);
         when(mockOfferAccepter.accept(mockSchedulerDriver, RECOMMENDATIONS)).thenReturn(new ArrayList<>());
 
         assertTrue(scheduler.resourceOffers(mockSchedulerDriver, OFFERS, Arrays.asList(step)).isEmpty());
@@ -107,10 +128,9 @@ public class DefaultPlanSchedulerTest {
 
     @Test
     public void testEvaluateAcceptedOffers() throws InvalidRequirementException {
-        OfferRequirement requirement = OfferRequirement.create(TestConstants.TASK_TYPE, 0, TASKINFOS);
-        TestOfferStep step = new TestOfferStep(requirement);
+        TestOfferStep step = new TestOfferStep(podInstanceRequirement);
         step.setStatus(Status.PENDING);
-        when(mockOfferEvaluator.evaluate(requirement, OFFERS)).thenReturn(RECOMMENDATIONS);
+        when(mockOfferEvaluator.evaluate(podInstanceRequirement, OFFERS)).thenReturn(RECOMMENDATIONS);
         when(mockOfferAccepter.accept(mockSchedulerDriver, RECOMMENDATIONS)).thenReturn(ACCEPTED_IDS);
 
         assertEquals(ACCEPTED_IDS, scheduler.resourceOffers(mockSchedulerDriver, OFFERS, Arrays.asList(step)));
@@ -144,5 +164,4 @@ public class DefaultPlanSchedulerTest {
             this.operations = operations;
         }
     }
-    */
 }
