@@ -46,13 +46,6 @@ public class DefaultOfferRequirementProviderTest {
     @Mock private StateStore stateStore;
     private PodInstance podInstance;
 
-    private ResourceSpecification resourceSpecification = new DefaultResourceSpecification(
-            "cpus",
-            ValueUtils.getValue(ResourceTestUtils.getDesiredCpu(1.0)),
-            TestConstants.ROLE,
-            TestConstants.PRINCIPAL,
-            "CPUS");
-
     @Before
     public void beforeEach() throws Exception {
         MockitoAnnotations.initMocks(this);
@@ -81,12 +74,7 @@ public class DefaultOfferRequirementProviderTest {
 
     @Test
     public void testPlacementPassthru() throws InvalidRequirementException {
-        Protos.Resource cpu = ResourceTestUtils.getExpectedCpu(CPU);
-        Protos.TaskInfo taskInfo = TaskTestUtils.getTaskInfo(Arrays.asList(cpu));
-
         List<String> tasksToLaunch = TaskUtils.getTaskNames(podInstance);
-        PodInstanceRequirement podInstanceRequirement = new PodInstanceRequirement(podInstance, tasksToLaunch);
-
         OfferRequirement offerRequirement = provider.getNewOfferRequirement(podInstance, tasksToLaunch);
         Assert.assertNotNull(offerRequirement);
         Assert.assertTrue(offerRequirement.getPlacementRuleOptional().isPresent());

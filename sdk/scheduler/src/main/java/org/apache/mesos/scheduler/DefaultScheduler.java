@@ -511,6 +511,7 @@ public class DefaultScheduler implements Scheduler, Observer {
             reconciler.reconcile(driver);
             if (!reconciler.isReconciled()) {
                 LOGGER.info("Reconciliation is still in progress.");
+                declineOffers(driver, Collections.emptyList(), offers);
                 return;
             }
 

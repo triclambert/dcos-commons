@@ -103,7 +103,7 @@ public class DefaultStep extends DefaultObservable implements Step {
     public Set<String> getDirtyAssets() {
         if (isInProgress()) {
             Set<String> assets = new HashSet<>();
-            assets.add(getName());
+            assets.add(podInstanceRequirement.getPodInstance().getName());
             return assets;
         } else {
             return Collections.emptySet();

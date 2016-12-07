@@ -9,26 +9,89 @@
           "description":"The name of the service instance",
           "type":"string",
           "default":"hdfs"
+        },
+        "principal" : {
+          "description":"The name of the service instance",
+          "type":"string",
+          "default":"hdfs-principal"
         }
       }
     },
-    "hdfs":{
-      "description":"Hello Pod configuration properties",
+    "journal_node":{
+      "description":"HDFS configuration properties.",
       "type":"object",
       "properties":{
         "cpus":{
-          "description":"Hello task cpu requirements",
+          "description":"Journal node CPU requirement",
           "type":"number",
-          "default":0.1
+          "default": 0.1
         },
-        "count":{
-          "description":"Number of hdfs pods to run",
-          "type":"integer",
-          "default":1
+        "mem":{
+          "description":"Journal node memory requirement",
+          "type":"number",
+          "default": 512
+        },
+        "disk":{
+          "description":"Journal node disk size requirement in MB",
+          "type":"number",
+          "default": 5
+        },
+        "disk_type":{
+          "description":"Journal node disk type",
+          "type":"string",
+          "default": "ROOT"
         }
       },
       "required":[
         "cpus",
+        "mem",
+        "disk",
+        "disk_type"
+      ]
+    },
+    "name_node":{
+      "description":"HDFS configuration properties.",
+      "type":"object",
+      "properties":{
+        "cpus":{
+          "description":"Name node CPU requirement",
+          "type":"number",
+          "default": 0.1
+        },
+        "mem":{
+          "description":"Name node memory requirement",
+          "type":"number",
+          "default": 512
+        },
+        "disk":{
+          "description":"Name node disk size requirement in MB",
+          "type":"number",
+          "default": 5
+        },
+        "disk_type":{
+          "description":"Name node disk type",
+          "type":"string",
+          "default": "ROOT"
+        }
+      },
+      "required":[
+        "cpus",
+        "mem",
+        "disk",
+        "disk_type"
+      ]
+    },
+    "data_node":{
+      "description":"HDFS configuration properties.",
+      "type":"object",
+      "properties":{
+        "count":{
+          "description":"Number of data nodes to deploy.",
+          "type":"number",
+          "default": 3
+        }
+      },
+      "required":[
         "count"
       ]
     }

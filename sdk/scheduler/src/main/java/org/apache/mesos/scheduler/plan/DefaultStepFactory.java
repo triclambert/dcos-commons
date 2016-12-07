@@ -105,6 +105,14 @@ public class DefaultStepFactory implements StepFactory {
         boolean isOnTarget = isOnTarget(taskInfo);
         boolean hasReachedGoal = hasReachedGoalState(podInstance, taskInfo);
 
+        if (hasReachedGoal) {
+            TaskSpec.GoalState goalState = TaskUtils.getGoalState(podInstance, taskInfo.getName());
+            if (goalState.equals(TaskSpec.GoalState.FINISHED)) {
+                LOGGER.info("Automatically on target configuration due to having reached FINISHED goal.");
+                isOnTarget = true;
+            }
+        }
+
         LOGGER.info("Task: '{}' is on target: {} and has reached goal: {}.",
                 taskInfo.getName(), isOnTarget, hasReachedGoal);
 

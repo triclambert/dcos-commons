@@ -33,6 +33,17 @@ public class HdfsServiceSpecTest {
         environmentVariables.set("EXECUTOR_URI", "");
         environmentVariables.set("LIBMESOS_URI", "");
         environmentVariables.set("PORT0", "8080");
+        environmentVariables.set("SERVICE_NAME", "hdfs");
+        environmentVariables.set("SERVICE_PRINCIPAL", "principal");
+        environmentVariables.set("JOURNAL_CPUS", "1.0");
+        environmentVariables.set("JOURNAL_MEM", "1024");
+        environmentVariables.set("JOURNAL_DISK", "1024");
+        environmentVariables.set("JOURNAL_DISK_TYPE", "MOUNT");
+        environmentVariables.set("NAME_CPUS", "1.0");
+        environmentVariables.set("NAME_MEM", "1024");
+        environmentVariables.set("NAME_DISK", "1024");
+        environmentVariables.set("NAME_DISK_TYPE", "MOUNT");
+        environmentVariables.set("DATA_COUNT", "3");
     }
 
     @Before
@@ -42,12 +53,12 @@ public class HdfsServiceSpecTest {
 
     @Test
     public void testOneTimePlanDeserialization() throws Exception {
-        testDeserialization("svc_plan.yml");
+        testDeserialization("hdfs_svc.yml");
     }
 
     @Test
     public void testOneTimePlanValidation() throws Exception {
-        testValidation("svc_plan.yml");
+        testValidation("hdfs_svc.yml");
     }
 
     private void testDeserialization(String yamlFileName) throws Exception {
