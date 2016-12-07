@@ -34,6 +34,7 @@ public class HelloWorldServiceSpecTest {
         environmentVariables.set("LIBMESOS_URI", "");
         environmentVariables.set("COUNT", "2");
         environmentVariables.set("CPUS", "0.1");
+        environmentVariables.set("PORT0", "8080");
     }
 
     @Before

@@ -124,7 +124,6 @@ public class DefaultPlanCoordinatorTest {
                 new DefaultOfferRequirementProvider(new DefaultTaskConfigRouter(new HashMap<>()), stateStore, UUID.randomUUID()));
         phaseFactory = new DefaultPhaseFactory(stepFactory);
         taskKiller = new DefaultTaskKiller(stateStore, taskFailureListener, schedulerDriver);
-
         provider = new DefaultOfferRequirementProvider(new DefaultTaskConfigRouter(), stateStore, UUID.randomUUID());
         planScheduler = new DefaultPlanScheduler(offerAccepter, new OfferEvaluator(stateStore, provider), taskKiller);
         serviceSpecificationB = DefaultServiceSpec.newBuilder()

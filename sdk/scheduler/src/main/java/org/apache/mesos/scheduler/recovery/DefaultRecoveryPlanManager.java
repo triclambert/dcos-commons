@@ -201,7 +201,7 @@ public class DefaultRecoveryPlanManager extends ChainedObserver implements PlanM
                         Status.PENDING,
                         podInstance,
                         tasksToLaunch,
-                        RecoveryRequirement.RecoveryType.PERMANENT,
+                        RecoveryType.PERMANENT,
                         launchConstrainer));
             } else if (failedTasks.stream().noneMatch(isPodPermanentlyFailed)) {
                 logger.info("Recovering transiently failed pod: '{}'", podInstance.getName());
@@ -210,7 +210,7 @@ public class DefaultRecoveryPlanManager extends ChainedObserver implements PlanM
                         Status.PENDING,
                         podInstance,
                         tasksToLaunch,
-                        RecoveryRequirement.RecoveryType.TRANSIENT,
+                        RecoveryType.TRANSIENT,
                         launchConstrainer));
             }
         }

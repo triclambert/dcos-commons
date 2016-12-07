@@ -13,21 +13,19 @@ import java.util.Optional;
 
 /**
  * {@code DefaultRecoveryStep} is an extension of {@link DefaultStep} meant for use with
- * {@link DefaultRecoveryPlanManager}. It is responsible for following:
- * 1. Encapsulating {@link RecoveryRequirement}
- * 2. Updating launchHappened event.
+ * {@link DefaultRecoveryPlanManager}.
  */
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings("EQ_DOESNT_OVERRIDE_EQUALS")
 public class DefaultRecoveryStep extends DefaultStep {
     private LaunchConstrainer launchConstrainer;
-    private RecoveryRequirement.RecoveryType recoveryType;
+    private RecoveryType recoveryType;
 
     public DefaultRecoveryStep(
             String name,
             Status status,
             PodInstance podInstance,
             Collection<String> tasksToLaunch,
-            RecoveryRequirement.RecoveryType recoveryType,
+            RecoveryType recoveryType,
             LaunchConstrainer launchConstrainer) {
         super(
                 name,
@@ -47,7 +45,7 @@ public class DefaultRecoveryStep extends DefaultStep {
         }
     }
 
-    public RecoveryRequirement.RecoveryType getRecoveryType() {
+    public RecoveryType getRecoveryType() {
         return recoveryType;
     }
 

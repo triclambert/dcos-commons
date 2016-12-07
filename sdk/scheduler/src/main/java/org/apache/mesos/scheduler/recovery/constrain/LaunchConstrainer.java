@@ -1,7 +1,7 @@
 package org.apache.mesos.scheduler.recovery.constrain;
 
 import org.apache.mesos.Protos.Offer.Operation;
-import org.apache.mesos.scheduler.recovery.RecoveryRequirement;
+import org.apache.mesos.scheduler.recovery.RecoveryType;
 
 /**
  * This interface provides methods which govern and react to Launch Operations.  It is sometimes desirable to limit the
@@ -19,14 +19,14 @@ public interface LaunchConstrainer {
      * @param launchOperation The Launch Operation which occurred.
      * @param recoveryType The type of the recovery which has been executed.
      */
-    void launchHappened(Operation launchOperation, RecoveryRequirement.RecoveryType recoveryType);
+    void launchHappened(Operation launchOperation, RecoveryType recoveryType);
 
     /**
-     * Determines whether the given {@link org.apache.mesos.scheduler.recovery.RecoveryRequirement.RecoveryType}
+     * Determines whether the given {@link org.apache.mesos.scheduler.recovery.RecoveryType}
      * can be launchHappened right now.
      *
-     * @param recoveryType The {@link RecoveryRequirement.RecoveryType} to be examined.
+     * @param recoveryType The {@link RecoveryType} to be examined.
      * @return True if the offer is safe to launch immediately, false if it should wait
      */
-    boolean canLaunch(RecoveryRequirement.RecoveryType recoveryType);
+    boolean canLaunch(RecoveryType recoveryType);
 }
