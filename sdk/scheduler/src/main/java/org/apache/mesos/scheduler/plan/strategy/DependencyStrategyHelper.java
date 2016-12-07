@@ -1,6 +1,7 @@
 package org.apache.mesos.scheduler.plan.strategy;
 
 import org.apache.mesos.scheduler.plan.Element;
+import org.apache.mesos.scheduler.plan.Step;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -50,14 +51,36 @@ public class DependencyStrategyHelper<C extends Element> {
     }
 
     public Collection<C> getCandidates(Collection<String> dirtyAssets) {
+        if (dependencies.size() == 0) {
+            return Collections.emptyList();
+        }
+
         Collection<C> candidates = dependencies.entrySet().stream()
                 .filter(entry -> !entry.getKey().getStrategy().isInterrupted())
-                .filter(entry -> !dirtyAssets.contains(entry.getKey().getName()))
                 .filter(entry -> !entry.getKey().isComplete())
                 .filter(entry -> !entry.getKey().hasErrors())
                 .filter(entry -> dependenciesFulfilled(entry.getValue()))
                 .map(entry -> entry.getKey())
                 .collect(Collectors.toList());
+
+        if (candidates.size() == 0) {
+            return Collections.emptyList();
+        }
+
+        if (candidates.stream().findFirst().get() instanceof Step) {
+            List<C> cands = new ArrayList<C>();
+            for (C candidate : candidates) {
+                Step step = (Step) candidate;
+                Optional<String> asset = step.getAsset();
+                if (!asset.isPresent()) {
+                    cands.add(candidate);
+                } else if (!dirtyAssets.contains(asset.get())) {
+                    cands.add(candidate);
+                }
+            }
+
+            candidates = cands;
+        }
 
         return candidates;
     }

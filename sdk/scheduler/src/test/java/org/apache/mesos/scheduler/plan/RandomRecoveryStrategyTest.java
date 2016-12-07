@@ -1,5 +1,6 @@
 package org.apache.mesos.scheduler.plan;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.mesos.scheduler.plan.strategy.RandomStrategy;
 import org.apache.mesos.scheduler.plan.strategy.Strategy;
 import org.junit.Assert;
@@ -9,11 +10,10 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -31,10 +31,12 @@ public class RandomRecoveryStrategyTest {
     public void beforeEach() {
         MockitoAnnotations.initMocks(this);
         when(pendingStep.getName()).thenReturn("mock-step");
+        when(pendingStep.getAsset()).thenReturn(Optional.of("mock-step"));
         when(pendingStep.isPending()).thenReturn(true);
         when(pendingStep.getStrategy()).thenReturn(strategy);
 
         when(completeStep.getName()).thenReturn("mock-step");
+        when(pendingStep.getAsset()).thenReturn(Optional.of("mock-step"));
         when(completeStep.isPending()).thenReturn(false);
         when(completeStep.isComplete()).thenReturn(true);
         when(completeStep.getStrategy()).thenReturn(strategy);

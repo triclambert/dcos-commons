@@ -4,7 +4,6 @@ import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.mesos.Protos;
-import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.offer.TaskException;
 import org.apache.mesos.offer.TaskUtils;
 import org.apache.mesos.scheduler.DefaultObservable;
@@ -100,13 +99,16 @@ public class DefaultStep extends DefaultObservable implements Step {
     }
 
     @Override
-    public Set<String> getDirtyAssets() {
+    public Optional<String> getAsset() {
+        return Optional.of(podInstanceRequirement.getPodInstance().getName());
+    }
+
+    @Override
+    public Optional<String> getDirtyAsset() {
         if (isInProgress()) {
-            Set<String> assets = new HashSet<>();
-            assets.add(podInstanceRequirement.getPodInstance().getName());
-            return assets;
+            return getAsset();
         } else {
-            return Collections.emptySet();
+            return Optional.empty();
         }
     }
 

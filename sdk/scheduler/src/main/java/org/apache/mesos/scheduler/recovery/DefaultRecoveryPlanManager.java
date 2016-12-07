@@ -2,7 +2,6 @@ package org.apache.mesos.scheduler.recovery;
 
 import org.apache.mesos.Protos;
 import org.apache.mesos.config.ConfigStore;
-import org.apache.mesos.offer.InvalidRequirementException;
 import org.apache.mesos.offer.TaskException;
 import org.apache.mesos.offer.TaskUtils;
 import org.apache.mesos.scheduler.ChainedObserver;

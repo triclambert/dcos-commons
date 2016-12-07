@@ -3,11 +3,9 @@ package org.apache.mesos.scheduler.plan;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.scheduler.Observable;
-import org.apache.mesos.specification.PodInstance;
 
 import java.util.Collection;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * Defines the interface for a Step of a {@link Phase}. The {@link Step} is the base unit of a set of
@@ -39,11 +37,13 @@ public interface Step extends Element {
      */
     void updateOfferStatus(Collection<Offer.Operation> operations);
 
+    Optional<String> getAsset();
+
     /**
      * Provides the assets which the Step is currently operating on to avoid contention.
      * @return
      */
-    Set<String> getDirtyAssets();
+    Optional<String> getDirtyAsset();
 
     /**
      * Thrown on invalid Step construction attempt.

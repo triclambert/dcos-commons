@@ -6,7 +6,6 @@ import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.config.DefaultTaskConfigRouter;
 import org.apache.mesos.offer.constrain.PlacementRule;
 import org.apache.mesos.scheduler.plan.DefaultPodInstance;
-import org.apache.mesos.scheduler.plan.PodInstanceRequirement;
 import org.apache.mesos.specification.*;
 import org.apache.mesos.specification.yaml.YAMLServiceSpecFactory;
 import org.apache.mesos.state.StateStore;
@@ -24,7 +23,6 @@ import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**

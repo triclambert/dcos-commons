@@ -9,7 +9,6 @@ import org.apache.mesos.specification.DefaultServiceSpec;
 import org.apache.mesos.specification.PodInstance;
 import org.apache.mesos.specification.PodSpec;
 import org.apache.mesos.specification.yaml.YAMLServiceSpecFactory;
-import org.apache.mesos.testutils.TestConstants;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

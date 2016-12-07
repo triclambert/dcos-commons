@@ -88,9 +88,9 @@ plans:
   deploy:
     strategy: serial
     phases:
-      #jn-deploy:
-      #  strategy: parallel
-      #  pod: journal
+      jn-deploy:
+        strategy: parallel
+        pod: journal
       nn-deploy:
         strategy: serial
         pod: name
@@ -103,9 +103,9 @@ plans:
             tasks: [bootstrap]
           - podInstance: 1
             tasks: [node]
-      #zkfc-deploy:
-      #  strategy: parallel
-      #  pod: zkfc
-      #dn-deploy:
-      #  strategy: parallel
-      #  pod: data
+      zkfc-deploy:
+        strategy: parallel
+        pod: zkfc
+      dn-deploy:
+        strategy: parallel
+        pod: data

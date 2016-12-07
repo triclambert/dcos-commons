@@ -1,7 +1,6 @@
 package org.apache.mesos.scheduler.plan;
 
 import org.apache.mesos.Protos;
-import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.scheduler.DefaultObservable;
 import org.apache.mesos.scheduler.plan.strategy.SerialStrategy;
 import org.apache.mesos.scheduler.plan.strategy.Strategy;
@@ -51,10 +50,13 @@ public class TestStep extends DefaultObservable implements Step {
     }
 
     @Override
-    public Set<String> getDirtyAssets() {
-        Set<String> assets = new HashSet<>();
-        assets.add(getName());
-        return assets;
+    public Optional<String> getAsset() {
+        return Optional.of(getName());
+    }
+
+    @Override
+    public Optional<String> getDirtyAsset() {
+        return getAsset();
     }
 
     @Override

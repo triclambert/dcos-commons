@@ -9,7 +9,6 @@ import org.apache.mesos.specification.PodInstance;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Optional;
 
 /**
  * {@code DefaultRecoveryStep} is an extension of {@link DefaultStep} meant for use with

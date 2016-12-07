@@ -14,6 +14,7 @@ import org.apache.mesos.scheduler.TaskKiller;
 import org.apache.mesos.scheduler.recovery.TaskFailureListener;
 import org.apache.mesos.specification.DefaultServiceSpec;
 import org.apache.mesos.specification.PodSpec;
+import org.apache.mesos.specification.ServiceSpec;
 import org.apache.mesos.specification.TestPodFactory;
 import org.apache.mesos.state.StateStore;
 import org.apache.mesos.testing.CuratorTestUtils;
@@ -124,6 +125,7 @@ public class DefaultPlanCoordinatorTest {
                 new DefaultOfferRequirementProvider(new DefaultTaskConfigRouter(new HashMap<>()), stateStore, UUID.randomUUID()));
         phaseFactory = new DefaultPhaseFactory(stepFactory);
         taskKiller = new DefaultTaskKiller(stateStore, taskFailureListener, schedulerDriver);
+
         provider = new DefaultOfferRequirementProvider(new DefaultTaskConfigRouter(), stateStore, UUID.randomUUID());
         planScheduler = new DefaultPlanScheduler(offerAccepter, new OfferEvaluator(stateStore, provider), taskKiller);
         serviceSpecificationB = DefaultServiceSpec.newBuilder()
@@ -136,6 +138,7 @@ public class DefaultPlanCoordinatorTest {
                 .build();
         environmentVariables = new EnvironmentVariables();
         environmentVariables.set("EXECUTOR_URI", "");
+        environmentVariables.set("LIBMESOS_URI", "");
     }
 
     private List<Protos.Offer> getOffers(double cpus, double mem, double disk) {
@@ -203,7 +206,10 @@ public class DefaultPlanCoordinatorTest {
     @Test
     public void testTwoPlanManagersPendingPlansSameAssets() throws Exception {
         final Plan planA = new DefaultPlanFactory(phaseFactory).getPlan(serviceSpecification);
-        final Plan planB = new DefaultPlanFactory(phaseFactory).getPlan(serviceSpecification);
+        ServiceSpec serviceSpecB = DefaultServiceSpec.newBuilder(serviceSpecification)
+                .name(serviceSpecification.getName() + "-B")
+                .build();
+        final Plan planB = new DefaultPlanFactory(phaseFactory).getPlan(serviceSpecB);
         final PlanManager planManagerA = new DefaultPlanManager(planA);
         final PlanManager planManagerB = new DefaultPlanManager(planB);
         final DefaultPlanCoordinator coordinator = new DefaultPlanCoordinator(

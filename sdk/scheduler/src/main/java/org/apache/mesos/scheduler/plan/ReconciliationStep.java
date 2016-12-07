@@ -1,12 +1,10 @@
 package org.apache.mesos.scheduler.plan;
 
 import org.apache.mesos.Protos;
-import org.apache.mesos.offer.OfferRequirement;
 import org.apache.mesos.reconciliation.Reconciler;
 import org.apache.mesos.scheduler.DefaultObservable;
 import org.apache.mesos.scheduler.plan.strategy.SerialStrategy;
 import org.apache.mesos.scheduler.plan.strategy.Strategy;
-import org.apache.mesos.specification.PodInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,8 +59,13 @@ public class ReconciliationStep extends DefaultObservable implements Step {
     }
 
     @Override
-    public Set<String> getDirtyAssets() {
-        return Collections.emptySet();
+    public Optional<String> getAsset() {
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<String> getDirtyAsset() {
+        return Optional.empty();
     }
 
     @Override

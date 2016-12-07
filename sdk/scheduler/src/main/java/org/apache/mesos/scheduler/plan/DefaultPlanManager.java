@@ -3,10 +3,7 @@ package org.apache.mesos.scheduler.plan;
 import org.apache.mesos.Protos;
 import org.apache.mesos.scheduler.ChainedObserver;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Provides the default implementation of a {@link PlanManager}.
@@ -43,7 +40,10 @@ public class DefaultPlanManager extends ChainedObserver implements PlanManager {
             final List<? extends Step> steps = phase.getChildren();
             for (Step step : steps) {
                 if (step.isPrepared() || step.isStarting()) {
-                    dirtyAssets.addAll(step.getDirtyAssets());
+                    Optional<String> dirtyAsset = step.getDirtyAsset();
+                    if (dirtyAsset.isPresent()) {
+                        dirtyAssets.add(dirtyAsset.get());
+                    }
                 }
             }
         }
