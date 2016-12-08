@@ -17,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.io.File;
+import java.net.URL;
 import java.util.Collections;
 
 import static org.apache.mesos.specification.yaml.YAMLServiceSpecFactory.generateRawSpecFromYAML;
@@ -44,6 +45,9 @@ public class HdfsServiceSpecTest {
         environmentVariables.set("NAME_DISK", "1024");
         environmentVariables.set("NAME_DISK_TYPE", "MOUNT");
         environmentVariables.set("DATA_COUNT", "3");
+
+        URL resource = HdfsServiceSpecTest.class.getClassLoader().getResource("hdfs-site.xml");
+        environmentVariables.set("CONFIG_TEMPLATE_PATH", new File(resource.getPath()).getParent());
     }
 
     @Before

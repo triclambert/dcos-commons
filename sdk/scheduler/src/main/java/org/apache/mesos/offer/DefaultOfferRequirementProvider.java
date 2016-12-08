@@ -21,6 +21,7 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
 
     private static final String JAVA_HOME = "JAVA_HOME";
     private static final String POD_INSTANCE_INDEX_KEY = "POD_INSTANCE_INDEX";
+    private static final String TASK_NAME_KEY = "TASK_NAME";
     private static final String DEFAULT_JAVA_HOME = "jre1.8.0_91";
     private static final String DEFAULT_JAVA_URI =
             "https://downloads.mesosphere.com/dcos-commons/artifacts/jre-8u91-linux-x64.tar.gz";
@@ -90,7 +91,7 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
         }
 
         if (taskMap.size() == 0) {
-            LOGGER.warn("Attempting get existing OfferRequirement generated 0 tasks.");
+            LOGGER.warn("Attempting to get existing OfferRequirement generated 0 tasks.");
         }
 
         List<TaskRequirement> taskRequirements = new ArrayList<>();
@@ -218,11 +219,21 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
                 environment = Protos.Environment.getDefaultInstance();
             }
 
-            // Inject Pod Instance Index
             environment = environment.toBuilder()
+                    // Inject Pod Instance Index
                     .addVariables(Protos.Environment.Variable.newBuilder()
                             .setName(POD_INSTANCE_INDEX_KEY)
                             .setValue(String.valueOf(podInstance.getIndex()))
+                            .build())
+                    // Inject TASK_NAME as KEY:VALUE
+                    .addVariables(Protos.Environment.Variable.newBuilder()
+                            .setName(TASK_NAME_KEY)
+                            .setValue(String.valueOf(TaskSpec.getInstanceName(podInstance, taskSpec)))
+                            .build())
+                    // Inject TASK_NAME as KEY for conditional mustache templating
+                    .addVariables(Protos.Environment.Variable.newBuilder()
+                            .setName(String.valueOf(TaskSpec.getInstanceName(podInstance, taskSpec)))
+                            .setValue("true")
                             .build())
                     .build();
 
@@ -232,10 +243,10 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
         return null;
     }
 
-    private TaskRequirement getExistingTaskRequirement(Protos.TaskInfo taskInfo,
-                                                       TaskSpec taskSpec,
-                                                       PodInstance podInstance)
-            throws InvalidRequirementException {
+    private TaskRequirement getExistingTaskRequirement(
+            Protos.TaskInfo taskInfo,
+            TaskSpec taskSpec,
+            PodInstance podInstance) throws InvalidRequirementException {
 
         String taskType;
         try {
@@ -254,8 +265,8 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
                 .setTaskId(TaskUtils.emptyTaskId())
                 .setSlaveId(TaskUtils.emptyAgentId());
 
-        TaskUtils.setTargetConfiguration(taskInfoBuilder, targetConfigurationId);
-        TaskUtils.setConfigFiles(taskInfoBuilder, taskSpec.getConfigFiles());
+        taskInfoBuilder = TaskUtils.setTargetConfiguration(taskInfoBuilder, targetConfigurationId);
+        taskInfoBuilder = TaskUtils.setConfigFiles(taskInfoBuilder, taskSpec.getConfigFiles());
 
         if (taskSpec.getCommand().isPresent()) {
             Protos.CommandInfo updatedCommand = taskConfigRouter.getConfig(taskType)
@@ -265,6 +276,16 @@ public class DefaultOfferRequirementProvider implements OfferRequirementProvider
                             updatedCommand,
                             POD_INSTANCE_INDEX_KEY,
                             String.valueOf(podInstance.getIndex()));
+            updatedCommand =
+                    CommandUtils.addEnvVar(
+                            updatedCommand,
+                            TASK_NAME_KEY,
+                            TaskSpec.getInstanceName(podInstance, taskSpec));
+            updatedCommand =
+                    CommandUtils.addEnvVar(
+                            updatedCommand,
+                            TaskSpec.getInstanceName(podInstance, taskSpec),
+                            "true");
             taskInfoBuilder.setCommand(updatedCommand);
         }
 
