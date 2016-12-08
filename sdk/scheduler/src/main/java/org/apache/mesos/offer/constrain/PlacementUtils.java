@@ -74,15 +74,24 @@ public class PlacementUtils {
             LOGGER.warn("Unable to extract task type from taskinfo", e);
             taskInfoType = null;
         }
+
         if (!Objects.equal(taskInfoType, offerRequirement.getType())) {
             return false;
         }
 
-        // Check task names
-        Set<String> offerRequirementTaskNames = new HashSet<>();
-        for (TaskRequirement taskRequirement : offerRequirement.getTaskRequirements()) {
-            offerRequirementTaskNames.add(taskRequirement.getTaskInfo().getName());
+        // Check pod index
+        Integer index;
+        try {
+            index = TaskUtils.getIndex(taskInfo);
+        } catch (TaskException e) {
+            LOGGER.warn("Unable to extract index from taskinfo", e);
+            index = null;
         }
-        return offerRequirementTaskNames.contains(taskInfo.getName());
+
+        if (!Objects.equal(index, offerRequirement.getIndex())) {
+            return false;
+        }
+
+        return true;
     }
 }

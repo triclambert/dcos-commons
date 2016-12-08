@@ -5,16 +5,18 @@ import org.apache.mesos.offer.TaskUtils;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 /**
  * This class provides utility method for Tests concerned with Tasks.
  */
 public class TaskTestUtils {
+    private static Random random = new Random();
     public static Protos.TaskInfo getTaskInfo(Protos.Resource resource) {
         return getTaskInfo(Arrays.asList(resource));
     }
 
-    public static Protos.TaskInfo getTaskInfo(List<Protos.Resource> resources) {
+    public static Protos.TaskInfo getTaskInfo(List<Protos.Resource> resources, Integer index) {
         Protos.TaskInfo.Builder builder = Protos.TaskInfo.newBuilder()
                 .setTaskId(TestConstants.TASK_ID)
                 .setName(TestConstants.TASK_NAME)
@@ -22,8 +24,11 @@ public class TaskTestUtils {
                 .setCommand(TestConstants.COMMAND_INFO)
                 .setContainer(TestConstants.CONTAINER_INFO);
         builder = TaskUtils.setType(builder, TestConstants.TASK_TYPE);
-        builder = TaskUtils.setIndex(builder, 0);
+        builder = TaskUtils.setIndex(builder, index);
         return builder.addAllResources(resources).build();
+    }
+    public static Protos.TaskInfo getTaskInfo(List<Protos.Resource> resources) {
+        return getTaskInfo(resources, Math.abs(random.nextInt()));
     }
 
     public static List<Protos.TaskInfo> getPodTaskInfos(
